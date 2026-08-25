@@ -9,10 +9,10 @@ from authuser.model.softdeletemodel import BaseModel
 
 
 
-CHOICES = (
-            ("OWNER", "OWNER"),
+ROLE_CHOICES = (
             ("ADMINISTRATOR", "ADMINISTRATOR"),
             ("CONTRACTOR", "CONTRACTOR"),
+            ("OWNER", "OWNER"),
 )
 
 class CustomUserManager(UserManager):
@@ -55,14 +55,12 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
         max_length=255, unique=True, db_column="USERNAME"
     )
     email = models.EmailField(blank=True, db_column="EMAIL")
-
-    is_agreement = models.BooleanField(default=False, db_column="IS_AGREEMENT")
     is_superuser = models.BooleanField(default=False, db_column="IS_SUPERUSER")
     is_staff = models.BooleanField(default=False, db_column="IS_STAFF")
     is_user = models.BooleanField(default=True, db_column="IS_USER")
     role = models.CharField(
         max_length=255,
-        choices=CHOICES,
+        choices=ROLE_CHOICES,
         default="CONTRACTOR",
         db_column="ROLE",
     )
