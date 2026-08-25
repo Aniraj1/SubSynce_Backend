@@ -57,6 +57,10 @@ class UserLogin(GenericAPIView):
 
 
 class UserDetail(GenericAPIView):
+    """
+    - User detail using access token
+    - User can post and update first name, last name and phone number
+    """
     queryset = models.UserDetail
     serializer_class = serializer.UserDetailSerializer
     authentication_classes = [JWTAuthentication]
@@ -126,6 +130,9 @@ class UserDetail(GenericAPIView):
         )
 
 class UserDetailView(GenericAPIView):
+    """
+    - Get user detail using access token
+    """
     queryset = models.User
     serializer_class = serializer.UserSerializer
     authentication_classes = [JWTAuthentication]
