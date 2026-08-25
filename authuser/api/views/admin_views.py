@@ -1,5 +1,4 @@
 from rest_framework.generics import GenericAPIView
-from rest_framework.throttling import AnonRateThrottle
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
@@ -7,7 +6,10 @@ from authuser import models, utils
 from authuser.api import serializer
 from django.core.exceptions import ValidationError
 from rest_framework import status
-from django.contrib.auth import authenticate
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from globalutils.returnobject import project_return
 
 
@@ -17,16 +19,24 @@ from globalutils.returnobject import project_return
 class ContractorRegisterView(GenericAPIView):
     """
     - Contractor register using username, email, password
+    - Only ADMINISTRATOR can create CONTRACTOR
     """
 
     queryset = models.User
     serializer_class = serializer.ContractorRegisterSerializer
-    throttle_classes = [AnonRateThrottle]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(tags=["authuser"])
     def post(self, request, *args, **kwargs):
         user_obj = self.serializer_class(data=request.data)
-
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not created.",
+                error="Only ADMINISTRATOR can create CONTRACTOR.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if user_obj.is_valid():
             try:
                 validate_password(password=request.data.get("password"))
@@ -36,6 +46,7 @@ class ContractorRegisterView(GenericAPIView):
                     error=e.args,
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
             check_email = models.User.objects.filter(
                 email=request.data.get("email")
             )
@@ -63,56 +74,4 @@ class ContractorRegisterView(GenericAPIView):
             message="Not created.",
             error=user_obj.errors,
             status=status.HTTP_400_BAD_REQUEST,
-        )
-
-
-
-class UserLogin(GenericAPIView):
-    """
-    - User login using username and password and return access and refresh token
-    """
-
-    queryset = models.User
-    serializer_class = serializer.UserLoginSerializer
-    throttle_classes = [AnonRateThrottle]
-
-    @extend_schema(tags=["authuser"])
-    def post(self, request, *args, **kwargs):
-        request_obj = self.serializer_class(data=request.data)
-        if not request_obj.is_valid():
-            return project_return(
-                message="Not logged in.",
-                error=request_obj.errors,
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        user = authenticate(
-            username=request.data.get("username"),
-            password=request.data.get("password"),
-        )
-
-        return_credentials = utils.get_tokens_for_user(user) if user else None
-
-
-        check_username = models.User.objects.filter(
-            username=request.data.get("username")
-        ).first()
-
-        if not check_username:
-            return project_return(
-                message="User does not exist.",
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if check_username.role != "ADMINISTRATOR":
-            return project_return(
-                message="User does not exists.",
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-
-        return project_return(
-            message="Successfully logged in." if user else "Not logged in.",
-            data= return_credentials,
-            status=status.HTTP_200_OK if user else status.HTTP_401_UNAUTHORIZED,
         )
