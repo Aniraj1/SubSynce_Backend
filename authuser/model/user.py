@@ -94,6 +94,9 @@ class UserDetail(models.Model):
     last_name = models.CharField(
         max_length=255, blank=True, null=True, db_column="LAST_NAME"
     )
+    phone = models.CharField(
+        max_length=255, blank=True, null=True, unique=True, db_column="PHONE"
+    )
 
     class Meta:
         db_table = "POC_USER_DETAIL"
