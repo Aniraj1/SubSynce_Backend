@@ -12,6 +12,7 @@ from authuser.model.softdeletemodel import BaseModel
 ROLE_CHOICES = (
             ("ADMINISTRATOR", "ADMINISTRATOR"),
             ("CONTRACTOR", "CONTRACTOR"),
+            ("OWNER", "OWNER"),
 )
 
 class CustomUserManager(UserManager):
