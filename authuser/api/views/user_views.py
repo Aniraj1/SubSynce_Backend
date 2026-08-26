@@ -8,6 +8,13 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from globalutils.returnobject import project_return
 
 
@@ -148,4 +155,109 @@ class UserDetailView(GenericAPIView):
             message="Successfully fetched.",
             data=user_obj.data,
             status=status.HTTP_200_OK,
+        )
+    
+
+class UserLogout(GenericAPIView):
+    """
+    - logouts out user and invalidate access and refresh tokens
+    """
+    serializer_class = serializer.TokenSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["authuser"])
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return project_return(
+                message="Refresh token is required.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return project_return(
+                message="Successfully logged out.",
+                status=status.HTTP_200_OK,
+            )
+        except TokenError as e:
+            return project_return(
+                message="Token is invalid or already expired.",
+                error=e.args,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+class GenerateTokenFromRefresh(TokenViewBase):
+    """
+    Renew tokens (access and refresh) with new expire time based
+    on specific user's access token.
+    """
+
+    serializer_class = TokenRefreshSerializer
+    throttle_classes = [AnonRateThrottle]
+
+    @extend_schema(tags=["authuser"])
+    def post(self, request, *args, **kwargs):
+        token_obj = self.get_serializer(data=request.data)
+        if not request.data.get("refresh"):
+            return project_return(
+                message="Refresh token is required.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            token_obj.is_valid(raise_exception=True)
+        except TokenError as e:
+            return project_return(
+                message="Token Error.",
+                error=e.args[0],
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return project_return(
+            message="Successfully generated.",
+            data=token_obj.validated_data,
+            status=status.HTTP_200_OK,
+        )
+
+    
+class LoginUserChangePasswordView(GenericAPIView):
+    queryset = models.User
+    serializer_class = serializer.LoginUserChangePasswordSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["authuser"])
+    def put(self, request, *args, **kwargs):
+        request_obj = self.serializer_class(data=request.data)
+        if not request_obj.is_valid():
+            return project_return(
+                message="Invalid data.",
+                error=request_obj.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        check_old_password = authenticate(
+            username=request.user.username,
+            password=request.data.get("old_password"),
+        )
+        if not check_old_password:
+            return project_return(
+                message="Invalid old password.",
+                error="The old password does not match.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            validate_password(password=request.data.get("new_password"))
+        except ValidationError as e:
+            return project_return(
+                message="Invalid password format.",
+                error=e.args,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        request.user.password = make_password(request.data.get("new_password"))
+        request.user.save()
+
+        return project_return(
+            message="Password changed successfully.", status=status.HTTP_200_OK
         )

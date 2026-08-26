@@ -52,3 +52,12 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "phone",
         ]
+
+
+class TokenSerializer(serializers.Serializer):
+    refresh = serializers.CharField(required=True)
+
+
+class LoginUserChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
