@@ -37,6 +37,7 @@ basepatterns = [
         name="redoc",
     ),
     path("api/", include("authuser.urls")),
+    path("api/", include("client.urls")),
 ]
 
 urlpatterns = [

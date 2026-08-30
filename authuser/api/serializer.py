@@ -61,3 +61,13 @@ class TokenSerializer(serializers.Serializer):
 class LoginUserChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class ListOfContractorsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = [
+            "id",
+            "username",
+            "email",
+        ]

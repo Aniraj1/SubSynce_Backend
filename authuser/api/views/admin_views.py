@@ -75,3 +75,35 @@ class ContractorRegisterView(GenericAPIView):
             error=user_obj.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+
+class ListOfContractorsView(GenericAPIView):
+    """
+    - List of all contractors
+    - Only ADMINISTRATOR can view list of CONTRACTOR
+    """
+
+    queryset = models.User.objects.filter(role="CONTRACTOR")
+    serializer_class = serializer.ListOfContractorsSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["authuser"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(  
+                message="Not allowed.",
+                error="Only ADMINISTRATOR can view list of CONTRACTOR.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        filter_obj = self.filter_queryset(self.get_queryset())
+        data = self.paginate_queryset(filter_obj)
+        contractor_obj = self.serializer_class(data, many=True)
+        return project_return(
+            message="Successfully fetched.",
+            data=self.get_paginated_response(contractor_obj.data),
+            status=status.HTTP_200_OK,
+        )

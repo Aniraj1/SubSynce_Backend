@@ -77,7 +77,7 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
         return self.username
 
 
-class UserDetail(models.Model):
+class UserDetail(BaseModel):
     """
     User detail model where all extra information about user are store
     """
