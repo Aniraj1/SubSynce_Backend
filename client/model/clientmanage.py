@@ -25,7 +25,7 @@ class Client(BaseModel):
         
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}".strip()
+        return f"{self.first_name} {self.last_name} || {self.id}".strip()
 
 class Site(BaseModel):
     """

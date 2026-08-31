@@ -19,7 +19,7 @@ class AddClientView(GenericAPIView):
     - Only ADMINISTRATOR can create CLIENT
     """
 
-    queryset = clientmanage.Client
+    queryset = clientmanage.Client.objects.all()
     serializer_class = serializer.ClientSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -58,10 +58,29 @@ class AddClientView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @extend_schema(tags=["client"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch CLIENT.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        filter_obj = self.filter_queryset(self.get_queryset())
+        data = self.paginate_queryset(filter_obj)
+        client_obj = self.serializer_class(data, many=True)
+        return project_return(
+            message="Successfully fetched.",
+            data=self.get_paginated_response(client_obj.data),
+            status=status.HTTP_200_OK,
+        )
+        
+
 
 class UpdateClientView(GenericAPIView):
     """
     - Client update using first_name, last_name, phone
+    - delete client using id
     - Only ADMINISTRATOR can update CLIENT
     """
 
@@ -114,5 +133,31 @@ class UpdateClientView(GenericAPIView):
             data=client_obj.data,
             status=status.HTTP_200_OK,
         )
+
+    @extend_schema(tags=["client"])
+    def delete(self, request, *args, **kwargs):
+        client_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
+        if not client_query:
+            return project_return(
+                message="Not deleted.",
+                error="Client not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not deleted.",
+                error="Only ADMINISTRATOR can delete CLIENT.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        client_query.delete()
+        return project_return(
+            message="Successfully deleted.",
+            status=status.HTTP_200_OK,
+        )
+
+
+
 
 
