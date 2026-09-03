@@ -13,7 +13,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from globalutils.returnobject import project_return
 
 
-class AddClientView(GenericAPIView):
+class ClientView(GenericAPIView):
     """
     - Client register using first_name, last_name, phone, email
     - Only ADMINISTRATOR can create CLIENT
@@ -91,6 +91,30 @@ class UpdateClientView(GenericAPIView):
     throttle_classes = [UserRateThrottle]
 
     @extend_schema(tags=["client"])
+    def get(self, request, *args, **kwargs):
+        client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
+        if not client_query:
+            return project_return(
+                message="Not fetched.",
+                error="Client not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch CLIENT.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        client_obj = self.serializer_class(client_query)
+        return project_return(
+            message="Successfully fetched.",
+            data=client_obj.data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(tags=["client"])
     def put(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not client_query:
@@ -160,4 +184,160 @@ class UpdateClientView(GenericAPIView):
 
 
 
+class SiteView(GenericAPIView):
+    """
+    - Site register using name, address, cleaning_frequency, price, client_id, cleaning_instructions
+    - Only ADMINISTRATOR can create SITE
+    """
 
+    queryset = clientmanage.Site.objects.all()
+    serializer_class = serializer.SiteSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["site"])
+    def post(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not created.",
+                error="Only ADMINISTRATOR can create SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        client_id = request.data.get("client_id")
+        if not client_id or not clientmanage.Client.objects.filter(id=client_id).exists():
+            return project_return(
+                message="Not created.",
+                error="Client not found.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payload = request.data.copy()
+        files = request.FILES.getlist("site_image")
+        if files:
+            payload.setlist("site_image", files)
+
+        site_obj = self.serializer_class(data=payload)
+        if site_obj.is_valid():
+            site = site_obj.save()
+            return project_return(
+                message="Successfully created.",
+                data=self.serializer_class(site).data,
+                status=status.HTTP_201_CREATED,
+            )
+
+        return project_return(
+            message="Not created.",
+            error=site_obj.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class UpdateSiteView(GenericAPIView):
+    """
+    - Site update using name, address, cleaning_frequency, price, client_id, cleaning_instructions
+    - delete site using id
+    - Only ADMINISTRATOR can update SITE
+    """
+
+    queryset = clientmanage.Site.objects.all()
+    serializer_class = serializer.UpdateSiteSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["site"])
+    def put(self, request, *args, **kwargs):
+        site_query = self.get_queryset().filter(id=kwargs.get("id")).first()
+        if not site_query:
+            return project_return(
+                message="Not updated.",
+                error="Site not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not updated.",
+                error="Only ADMINISTRATOR can update SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        site_obj = self.serializer_class(site_query, data=request.data, partial=True)
+        if not site_obj.is_valid():
+            return project_return(
+                message="Not updated.",
+                error=site_obj.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        site_obj.save()
+        return project_return(
+            message="Successfully updated.",
+            data=site_obj.data,
+            status=status.HTTP_200_OK,
+        )
+
+
+    @extend_schema(tags=["site"])
+    def delete(self, request, *args, **kwargs):
+        site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
+        if not site_query:
+            return project_return(
+                message="Not deleted.",
+                error="Site not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not deleted.",
+                error="Only ADMINISTRATOR can delete SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        site_query.delete()
+        return project_return(
+            message="Successfully deleted.",
+            status=status.HTTP_200_OK,
+        )
+
+
+
+
+class GetSiteView(GenericAPIView):
+    """
+    - Get site details using id
+    - Only ADMINISTRATOR can fetch SITE
+    """
+    queryset = clientmanage.Site.objects.all()
+    serializer_class = serializer.GetSiteSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    
+    @extend_schema(tags=["site"])
+    def get(self, request, *args, **kwargs):
+        site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
+        if not site_query:
+            return project_return(
+                message="Not fetched.",
+                error="Site not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        site_obj = self.serializer_class(site_query)
+        return project_return(
+            message="Successfully fetched.",
+            data=site_obj.data,
+            status=status.HTTP_200_OK,
+        )
