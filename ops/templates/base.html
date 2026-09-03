@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SubSync{% endblock %}</title>
+    
+    <!-- Pretendard Font -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    
+    <!-- Material Symbols Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Play CDN for development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        // SubSync brand colors from design.md
+                        surface: '#F5F3F1',
+                        'surface-container': '#E4DFD9',
+                        'surface-container-high': '#D9D3CC',
+                        primary: '#F4842B',
+                        'primary-hover': '#E67520',
+                        'on-primary': '#FFFFFF',
+                        ink: '#222221',
+                        'ink-light': '#6B6B6A',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard Variable', 'Pretendard', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-surface text-ink font-sans min-h-screen">
+    
+    <!-- Messages (Success, Error, etc.) -->
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-xl shadow-lg {% if message.tags == 'success' %}bg-success{% elif message.tags == 'error' %}bg-error{% else %}bg-primary{% endif %} text-white">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content Area -->
+    {% block content %}
+    <!-- Child templates will fill this -->
+    {% endblock %}
+    
+    <!-- JavaScript -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Auto-hide messages after 5 seconds -->
+    <script>
+        setTimeout(function() {
+            document.querySelectorAll('.fixed.top-4').forEach(function(el) {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(function() { el.remove(); }, 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

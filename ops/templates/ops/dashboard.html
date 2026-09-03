@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - SubSync{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-surface-container-high">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
+            <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-on-primary" style="font-size: 20px;">cleaning_services</span>
+            </div>
+            <span class="text-lg font-semibold text-ink">SubSync</span>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <div class="space-y-1">
+                <!-- Dashboard (active) -->
+                <a href="{% url 'ops:dashboard' %}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-primary/10 text-primary">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                
+                <!-- Clients (admin roles only) -->
+                {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}
+                <a href="#" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-light hover:bg-surface-container hover:text-ink transition-colors">
+                    <span class="material-symbols-outlined">person</span>
+                    <span>Clients</span>
+                </a>
+                
+                <a href="#" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-light hover:bg-surface-container hover:text-ink transition-colors">
+                    <span class="material-symbols-outlined">location_on</span>
+                    <span>Sites</span>
+                </a>
+                {% endif %}
+                
+                <!-- All roles -->
+                <a href="#" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-light hover:bg-surface-container hover:text-ink transition-colors">
+                    <span class="material-symbols-outlined">event</span>
+                    <span>Schedules</span>
+                </a>
+                
+                <a href="#" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-light hover:bg-surface-container hover:text-ink transition-colors">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <span>Invoices</span>
+                </a>
+                
+                {% if user.role == 'OWNER' %}
+                <a href="#" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-light hover:bg-surface-container hover:text-ink transition-colors">
+                    <span class="material-symbols-outlined">group</span>
+                    <span>Users</span>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        
+        <!-- Footer -->
+        <div class="px-4 py-3 border-t border-surface-container-high">
+            <p class="text-xs text-ink-light text-center">© 2026 SubSync</p>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top Bar -->
+        <header class="sticky top-0 z-30 bg-white border-b border-surface-container-high">
+            <div class="flex items-center justify-between px-4 lg:px-6 py-3">
+                <!-- Search -->
+                <div class="flex-1 max-w-md">
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-light">
+                            <span class="material-symbols-outlined">search</span>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search jobs, workers, invoices..."
+                            class="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-transparent focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+                        >
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center gap-3">
+                    <!-- Notifications -->
+                    <button class="relative p-2 rounded-xl hover:bg-surface-container transition-colors">
+                        <span class="material-symbols-outlined text-ink-light">notifications</span>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+                    </button>
+                    
+                    <!-- User Info -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-surface-container transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 18px;">person</span>
+                        </div>
+                        <span class="hidden md:block text-sm font-medium text-ink">
+                            {{ user.username }}
+                        </span>
+                        <span class="hidden md:block text-xs text-ink-light">
+                            ({{ user.role }})
+                        </span>
+                    </div>
+                    
+                    <!-- Logout Button -->
+                    <a href="{% url 'ops:logout' %}" 
+                       class="p-2 rounded-xl hover:bg-surface-container transition-colors"
+                       title="Logout">
+                        <span class="material-symbols-outlined text-ink-light">logout</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="container mx-auto px-4 py-8">
+                <!-- Page Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-ink">
+                        Welcome back, {{ user.username }}! 👋
+                    </h1>
+                    <p class="text-ink-light mt-2">
+                        Here's what's happening with your business today.
+                    </p>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Active Jobs Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-surface-container">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 24px;">work</span>
+                            </div>
+                            <span class="text-sm font-medium text-success flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                +2.5%
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-ink">{{ stats.active_jobs }}</p>
+                        <p class="text-sm text-ink-light mt-1">Active Jobs</p>
+                    </div>
+                    
+                    <!-- Subcontractors Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-surface-container">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-success" style="font-size: 24px;">person</span>
+                            </div>
+                            <span class="text-sm font-medium text-success flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                +5.2%
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-ink">{{ stats.subcontractors }}</p>
+                        <p class="text-sm text-ink-light mt-1">Subcontractors</p>
+                    </div>
+                    
+                    <!-- Invoices Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-surface-container">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-warning" style="font-size: 24px;">receipt_long</span>
+                            </div>
+                            <span class="text-sm font-medium text-success flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                +12.3%
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-ink">{{ stats.invoices }}</p>
+                        <p class="text-sm text-ink-light mt-1">Invoices</p>
+                    </div>
+                    
+                    <!-- Revenue Card -->
+                    <div class="bg-white rounded-2xl p-6 border border-surface-container">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 24px;">trending_up</span>
+                            </div>
+                            <span class="text-sm font-medium text-success flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                +8.1%
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-ink">${{ stats.revenue|floatformat:0 }}</p>
+                        <p class="text-sm text-ink-light mt-1">Revenue (AUD)</p>
+                    </div>
+                </div>
+                
+                <!-- More content will go here -->
+                <div class="bg-white rounded-2xl p-6 border border-surface-container">
+                    <h2 class="text-xl font-semibold text-ink mb-4">Today's Schedule</h2>
+                    <p class="text-ink-light">Coming soon...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

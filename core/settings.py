@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'authuser',
     'client',
+    'ops',
 ]
 
 MIDDLEWARE = [
@@ -66,10 +67,11 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'ops' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -178,6 +180,27 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -194,3 +217,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Additional locations for static files
+STATICFILES_DIRS = [
+    BASE_DIR / 'ops' / 'static',
+]
+
+# Authentication settings
+LOGIN_URL = 'ops:login'
+LOGIN_REDIRECT_URL = 'ops:dashboard'
+LOGOUT_REDIRECT_URL = 'ops:login'

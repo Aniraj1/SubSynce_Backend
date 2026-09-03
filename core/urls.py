@@ -24,7 +24,13 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-basepatterns = [
+# Web frontend URLs (template-based views)
+web_patterns = [
+    path("", include("ops.urls")),
+]
+
+# API URLs (DRF views)
+api_patterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/swagger/",
@@ -42,6 +48,7 @@ basepatterns = [
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include(basepatterns)),
+    path("", include(web_patterns)),
+    path("", include(api_patterns)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
