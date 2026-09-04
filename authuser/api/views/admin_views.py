@@ -19,7 +19,7 @@ from globalutils.returnobject import project_return
 class ContractorRegisterView(GenericAPIView):
     """
     - Contractor register using username, email, password
-    - Only ADMINISTRATOR can create CONTRACTOR
+    - Only ADMINISTRATOR can create CONTRACTOR users
     """
 
     queryset = models.User
@@ -80,8 +80,8 @@ class ContractorRegisterView(GenericAPIView):
 
 class ListOfContractorsView(GenericAPIView):
     """
-    - List of all contractors
-    - Only ADMINISTRATOR can view list of CONTRACTOR
+    - List all contractors
+    - Only ADMINISTRATOR can view the contractor list
     """
 
     queryset = models.User.objects.filter(role="CONTRACTOR")

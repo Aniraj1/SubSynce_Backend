@@ -160,7 +160,7 @@ class UserDetailView(GenericAPIView):
 
 class UserLogout(GenericAPIView):
     """
-    - logouts out user and invalidate access and refresh tokens
+    - Logs out the user by invalidating the refresh token
     """
     serializer_class = serializer.TokenSerializer
     authentication_classes = [JWTAuthentication]
@@ -191,8 +191,7 @@ class UserLogout(GenericAPIView):
 
 class GenerateTokenFromRefresh(TokenViewBase):
     """
-    Renew tokens (access and refresh) with new expire time based
-    on specific user's access token.
+    Renew tokens using a refresh token.
     """
 
     serializer_class = TokenRefreshSerializer

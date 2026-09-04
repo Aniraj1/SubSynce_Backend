@@ -136,3 +136,11 @@ client_secret.json
 .env.docker
 
 docs
+
+# Postman collections and local API workspace data
+postman/
+
+resources.yaml
+
+# Uploaded site images
+site_images/
