@@ -15,8 +15,9 @@ from globalutils.returnobject import project_return
 
 class ClientView(GenericAPIView):
     """
-    - Client register using first_name, last_name, phone, email
-    - Only ADMINISTRATOR can create CLIENT
+    - Create and list clients
+    - Client fields: first_name, last_name, phone, and email
+    - Only ADMINISTRATOR can create or list CLIENT records
     """
 
     queryset = clientmanage.Client.objects.all()
@@ -85,7 +86,7 @@ class UpdateClientView(GenericAPIView):
     """
 
     queryset = clientmanage.Client.objects.all()
-    serializer_class = serializer.UpdateClientSerializer
+    serializer_class = serializer.ClientSiteSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
@@ -236,8 +237,9 @@ class SiteView(GenericAPIView):
 
 class UpdateSiteView(GenericAPIView):
     """
-    - Site update using name, address, cleaning_frequency, price, client_id, cleaning_instructions
+    - Site details update using name, address, cleaning_frequency, price, and cleaning_instructions
     - delete site using id
+    - Get site details using id
     - Only ADMINISTRATOR can update SITE
     """
 
@@ -304,20 +306,6 @@ class UpdateSiteView(GenericAPIView):
         )
 
 
-
-
-class GetSiteView(GenericAPIView):
-    """
-    - Get site details using id
-    - Only ADMINISTRATOR can fetch SITE
-    """
-    queryset = clientmanage.Site.objects.all()
-    serializer_class = serializer.GetSiteSerializer
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
-    throttle_classes = [UserRateThrottle]
-
-    
     @extend_schema(tags=["site"])
     def get(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
@@ -335,9 +323,147 @@ class GetSiteView(GenericAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        site_obj = self.serializer_class(site_query)
+        site_obj = serializer.GetSiteSerializer(site_query)
         return project_return(
             message="Successfully fetched.",
             data=site_obj.data,
             status=status.HTTP_200_OK,
         )
+
+
+
+class SiteImageView(GenericAPIView):
+    """
+    - Site image upload using site_id and image
+    - Delete all images for a site using site_id
+    - Only ADMINISTRATOR can upload or delete SITE IMAGE
+    """
+
+    queryset = clientmanage.SiteImage.objects.all()
+    serializer_class = serializer.SiteImageSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["site"])
+    def post(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not uploaded.",
+                error="Only ADMINISTRATOR can upload SITE IMAGE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        site_id = str(kwargs.get("site_id"))
+        site = clientmanage.Site.objects.filter(id=site_id).first()
+        if not site:
+            return project_return(
+                message="Not uploaded.",
+                error="Site not found.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        print("Site: /////", site)
+
+        files = request.FILES.getlist("image")
+        print("Files:", files)
+        if not files:
+            return project_return(
+                message="Not uploaded.",
+                error="No image provided.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for file in files:
+            image_serializer = self.get_serializer(
+                data={"image": file}
+            )
+
+            if not image_serializer.is_valid():
+                return project_return(
+                    message="Not uploaded.",
+                    error=image_serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            image_serializer.save(site=site)
+
+        return project_return(
+            message="Successfully uploaded.",
+            status=status.HTTP_201_CREATED,
+        )
+
+
+    @extend_schema(tags=["site"])
+    def delete(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not deleted.",
+                error="Only ADMINISTRATOR can delete SITE IMAGE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        site_id = str(kwargs.get("site_id"))
+        site = clientmanage.Site.objects.filter(id=site_id).first()
+        if not site:
+            return project_return(
+                message="Not deleted.",
+                error="Site not found.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        images = self.get_queryset().filter(site=site)
+        if not images.exists():
+            return project_return(
+                message="Not deleted.",
+                error="No images found for this site.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        images.delete()
+        return project_return(
+            message="Successfully deleted.",
+            status=status.HTTP_200_OK,
+        )
+
+
+class RemoveSiteImageView(GenericAPIView):
+    """
+    - Remove a specific site image using site_id and image_id
+    - Only ADMINISTRATOR can remove SITE IMAGE
+    """
+
+    queryset = clientmanage.SiteImage.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["site"])
+    def delete(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not deleted.",
+                error="Only ADMINISTRATOR can delete SITE IMAGE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        site_id = str(kwargs.get("site_id"))
+        image_id = str(kwargs.get("image_id"))
+        site = clientmanage.Site.objects.filter(id=site_id).first()
+        if not site:
+            return project_return(
+                message="Not deleted.",
+                error="Site not found.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        image = self.get_queryset().filter(site=site, id=image_id).first()
+        if not image:
+            return project_return(
+                message="Not deleted.",
+                error="Image not found for this site.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        image.delete()
+        return project_return(
+            message="Successfully deleted.",
+            status=status.HTTP_200_OK,
+        )
+
+

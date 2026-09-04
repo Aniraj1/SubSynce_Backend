@@ -8,5 +8,6 @@ urlpatterns = [
     path("client/<str:id>/", admin_views.UpdateClientView.as_view(), name="UpdateClientView"),
     path("site/", admin_views.SiteView.as_view(), name="SiteView"),
     path("site/<str:id>/", admin_views.UpdateSiteView.as_view(), name="UpdateSiteView"),
-    path("site-details/<str:id>/", admin_views.GetSiteView.as_view(), name="GetSiteView"),
+    path("site-image/<str:site_id>/", admin_views.SiteImageView.as_view(), name="SiteImageView"),
+    path("remove-site-image/<str:site_id>/<str:image_id>/", admin_views.RemoveSiteImageView.as_view(), name="RemoveSiteImageView"),
 ]
