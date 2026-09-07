@@ -20,7 +20,7 @@ from globalutils.returnobject import project_return
 class UserRegister(GenericAPIView):
     """
     - User register using username, email, password
-    - Only OWNER can create ADMINSTRATOR AND CONTRACTOR users.
+    - Only OWNER can create ADMINISTRATOR and CONTRACTOR users
     """
 
     queryset = models.User
