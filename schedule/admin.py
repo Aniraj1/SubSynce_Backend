@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from schedule.model import cleaningschedule
+
+
+admin.site.register(cleaningschedule.ServiceSchedule)
+admin.site.register(cleaningschedule.ScheduleAssignment)
+admin.site.register(cleaningschedule.ServiceOccurrence)

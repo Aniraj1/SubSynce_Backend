@@ -1,3 +1,3 @@
-from django.db import models
+from schedule.model.cleaningschedule import models
 
 # Create your models here.
