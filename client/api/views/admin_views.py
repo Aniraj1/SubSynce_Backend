@@ -431,6 +431,7 @@ class RemoveSiteImageView(GenericAPIView):
 
     queryset = clientmanage.SiteImage.objects.all()
     authentication_classes = [JWTAuthentication]
+    serializer_class = None
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 

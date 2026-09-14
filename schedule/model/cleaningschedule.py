@@ -2,7 +2,7 @@ from datetime import timedelta
 import uuid
 from django.conf import settings
 from django.db import models
-from jsonschema import ValidationError
+from django.core.exceptions import ValidationError
 from authuser.model.softdeletemodel import BaseModel
 from client.model.clientmanage import Site
 from authuser.model.user import User
@@ -64,12 +64,6 @@ class ServiceSchedule(BaseModel):
     class Meta:
         db_table = "POC_SERVICE_SCHEDULE"
         ordering = ["start_date"]
-
-    def clean(self):
-        if self.end_date and self.end_date < self.start_date:
-            raise ValidationError({"end_date": "End date cannot be earlier than start date."})
-        if self.frequency != "ONCE" and not self.end_date:
-            raise ValidationError({"end_date": "End date is required for recurring schedules."})
 
     def __str__(self):
         return f"{self.id}"
