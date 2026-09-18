@@ -38,6 +38,7 @@ basepatterns = [
     ),
     path("api/", include("authuser.urls")),
     path("api/", include("client.urls")),
+    path("api/", include("schedule.urls"))
 ]
 
 urlpatterns = [

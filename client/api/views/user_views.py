@@ -27,11 +27,11 @@ class UserSiteView(GenericAPIView):
         if request.user.role != "CONTRACTOR":
             return project_return(
                 message="Failed to fetch.",
-                error="Only ADMINISTRATOR can fetch SITE.",
+                error="Only CONTRACTOR can fetch SITE.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        filter_obj = self.filter_queryset(self.get_queryset().filter(assigned_contractors=str(request.user.id)))
+        filter_obj = self.filter_queryset(self.get_queryset().filter(assigned_contractor=str(request.user.id)))
         data = self.paginate_queryset(filter_obj)
         site_obj = self.serializer_class(data, many=True)
         return project_return(
