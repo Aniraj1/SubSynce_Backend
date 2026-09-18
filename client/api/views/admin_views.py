@@ -234,6 +234,23 @@ class SiteView(GenericAPIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    @extend_schema(tags=["site"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        filter_obj = self.filter_queryset(self.get_queryset())
+        data = self.paginate_queryset(filter_obj)
+        site_obj = self.serializer_class(data, many=True)
+        return project_return(
+            message="Successfully fetched.",
+            data=self.get_paginated_response(site_obj.data),
+            status=status.HTTP_200_OK,
+        )
+
 
 class UpdateSiteView(GenericAPIView):
     """
@@ -431,6 +448,7 @@ class RemoveSiteImageView(GenericAPIView):
 
     queryset = clientmanage.SiteImage.objects.all()
     authentication_classes = [JWTAuthentication]
+    serializer_class = None
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 

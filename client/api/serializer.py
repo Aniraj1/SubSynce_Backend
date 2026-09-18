@@ -42,6 +42,7 @@ class SiteSerializer(serializers.ModelSerializer):
             "cleaning_instructions",
             "site_image",
             "images",
+            "assigned_contractors",
         ]
 
     def create(self, validated_data):
@@ -93,6 +94,7 @@ class UpdateSiteSerializer(serializers.ModelSerializer):
             "price",
             "client_id",
             "cleaning_instructions",
+            "assigned_contractors",
         ]
 
 class GetSiteSerializer(serializers.ModelSerializer):
@@ -110,8 +112,6 @@ class GetSiteSerializer(serializers.ModelSerializer):
             "client",
             "site_images",
         ]
-
-
 
 
 
