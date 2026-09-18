@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     "corsheaders",
     'authuser',
     'client',
-    'schedule',
 ]
 
 MIDDLEWARE = [
