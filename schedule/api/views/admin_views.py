@@ -99,7 +99,7 @@ class ServiceScheduleView(GenericAPIView):
 
 class ServiceScheduleDetailView(GenericAPIView):
     """
-    Retrieve, update, and delete an individual service schedule.
+    Retrieve, update, and cancel an individual service schedule.
 
     Only administrators can manage service schedules.
     """
@@ -187,22 +187,23 @@ class ServiceScheduleDetailView(GenericAPIView):
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
-                message="Not deleted.",
-                error="Only ADMINISTRATOR can delete service schedules.",
+                message="Not cancelled.",
+                error="Only ADMINISTRATOR can cancel service schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         schedule = self.get_queryset().filter(id=kwargs.get("id")).first()
         if schedule is None:
             return project_return(
-                message="Invalid data.",
+                message="Not cancelled.",
                 error="Schedule not found.",
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
-        schedule.delete()
+
+        schedule.status = "CANCELLED"
+        schedule.save()
         return project_return(
-            message="Successfully deleted.",
+            message="Successfully cancelled.",
             status=status.HTTP_200_OK,
         )
 
