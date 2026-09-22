@@ -26,7 +26,7 @@ class ClientView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def post(self, request, *args, **kwargs):
         client_obj = self.serializer_class(data=request.data)
         if request.user.role != "ADMINISTRATOR":
@@ -59,7 +59,7 @@ class ClientView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -91,7 +91,7 @@ class UpdateClientView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def get(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not client_query:
@@ -115,7 +115,7 @@ class UpdateClientView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def put(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not client_query:
@@ -159,7 +159,7 @@ class UpdateClientView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def delete(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not client_query:
@@ -197,7 +197,7 @@ class SiteView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def post(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -234,7 +234,7 @@ class SiteView(GenericAPIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -266,7 +266,7 @@ class UpdateSiteView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def put(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not site_query:
@@ -299,7 +299,8 @@ class UpdateSiteView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not site_query:
@@ -323,7 +324,8 @@ class UpdateSiteView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+    @extend_schema(tags=["Admin: Site"])
     def get(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not site_query:
@@ -362,7 +364,7 @@ class SiteImageView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def post(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -408,7 +410,9 @@ class SiteImageView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -452,7 +456,7 @@ class RemoveSiteImageView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(

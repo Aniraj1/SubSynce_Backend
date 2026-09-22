@@ -28,7 +28,7 @@ class ContractorRegisterView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["Admin: Authuser"])
     def post(self, request, *args, **kwargs):
         user_obj = self.serializer_class(data=request.data)
         if request.user.role != "ADMINISTRATOR":
@@ -90,7 +90,7 @@ class ListOfContractorsView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["Admin: Authuser"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(  
