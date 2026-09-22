@@ -25,6 +25,8 @@ class ServiceScheduleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["site__name", "scheduled_date", "status"]
+    search_fields = ["site__name", "notes"]
     ordering_fields = ["scheduled_date", "status", "site_id"]
     ordering = ["scheduled_date", "scheduled_time"]
 
@@ -75,7 +77,31 @@ class ServiceScheduleView(GenericAPIView):
                 ),
                 required=False,
                 type=str,
-            )
+            ),
+            OpenApiParameter(
+                name="site__name",
+                description="Filter by the exact site name.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="scheduled_date",
+                description="Filter by scheduled date (YYYY-MM-DD).",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="status",
+                description="Filter by schedule status.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="q",
+                description="Search site name or schedule notes.",
+                required=False,
+                type=str,
+            ),
         ]
     )
     def get(self, request, *args, **kwargs):
