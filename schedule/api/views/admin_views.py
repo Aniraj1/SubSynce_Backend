@@ -30,7 +30,7 @@ class ServiceScheduleView(GenericAPIView):
     ordering_fields = ["scheduled_date", "status", "site_id"]
     ordering = ["scheduled_date", "scheduled_time"]
 
-    @extend_schema(tags=["Service Schedule"])
+    @extend_schema(tags=["Admin: Service Schedule"])
     def post(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -69,7 +69,7 @@ class ServiceScheduleView(GenericAPIView):
         )
 
     @extend_schema(
-        tags=["Service Schedule"], parameters=[
+        tags=["Admin: Service Schedule"], parameters=[
             OpenApiParameter(
                 name="ordering",
                 description=(
@@ -135,7 +135,7 @@ class ServiceScheduleDetailView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["Service Schedule"])
+    @extend_schema(tags=["Admin: Service Schedule"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -160,7 +160,7 @@ class ServiceScheduleDetailView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["Service Schedule"])
+    @extend_schema(tags=["Admin: Service Schedule"])
     def put(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -216,7 +216,7 @@ class ServiceScheduleDetailView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["Service Schedule"])
+    @extend_schema(tags=["Admin: Service Schedule"])
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -263,8 +263,7 @@ class ChangeStatusView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-
-    @extend_schema(tags=["Service Schedule"])
+    @extend_schema(tags=["Admin: Service Schedule"])
     def patch(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
