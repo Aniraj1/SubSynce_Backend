@@ -21,7 +21,7 @@ class UserSiteView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["User: Site"])
     def get(self, request, *args, **kwargs):
 
         if request.user.role != "CONTRACTOR":
