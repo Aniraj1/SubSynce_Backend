@@ -17,7 +17,7 @@ from django.utils import timezone
 
 class UserScheduleView(GenericAPIView):
     """
-    API endpoint that allows users to view their cleaning schedules.
+    List cleaning schedules for the authenticated contractor.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.DetailScheduleSerializer
@@ -58,8 +58,8 @@ class UserScheduleView(GenericAPIView):
         """
         if request.user.role != "CONTRACTOR":
             return project_return(
-                message="Not created.",
-                error="Only Contractors can view their cleaning schedules.",
+                message="Not fetched.",
+                error="Only CONTRACTOR users can view their cleaning schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -77,7 +77,7 @@ class UserScheduleView(GenericAPIView):
 
 class GetDetailScheduleView(GenericAPIView):
     """
-    API endpoint that allows users to view the details of a specific cleaning schedule.
+    Retrieve one cleaning schedule assigned to the authenticated contractor.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.DetailScheduleSerializer
@@ -113,7 +113,7 @@ class GetDetailScheduleView(GenericAPIView):
 
 class UserScheduleSummaryView(GenericAPIView):
     """
-    API endpoint that allows users to view a summary of their cleaning schedules.
+    Return schedule counts for the authenticated contractor.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.DetailScheduleSerializer
@@ -126,7 +126,7 @@ class UserScheduleSummaryView(GenericAPIView):
         if request.user.role != "CONTRACTOR":
             return project_return(
                 message="Not fetched.",
-                error="Only CONTRACTOR can fetch their own schedule summary.",
+                error="Only CONTRACTOR users can fetch their own schedule summary.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 

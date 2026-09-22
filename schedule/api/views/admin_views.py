@@ -17,7 +17,7 @@ from django.utils import timezone
 
 class ServiceScheduleView(GenericAPIView):
     """
-    - create service schedule
+    Create and list service schedules for administrators.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.ServiceScheduleSerializer
@@ -40,7 +40,7 @@ class ServiceScheduleView(GenericAPIView):
         site = Site.objects.filter(id=str(request.data.get("site"))).first()
         if not site:
             return project_return(
-                message="Not updated.",
+                message="Not created.",
                 error="Site does not exist.",
                 status=status.HTTP_404_NOT_FOUND,
             )
@@ -85,7 +85,7 @@ class ServiceScheduleView(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not fetched.",
-                error="Only ADMINISTRATOR can fetch CLIENT.",
+                error="Only ADMINISTRATOR can fetch service schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
         filter_obj = self.filter_queryset(self.get_queryset())
@@ -99,10 +99,9 @@ class ServiceScheduleView(GenericAPIView):
 
 class ServiceScheduleDetailView(GenericAPIView):
     """
-    - update service schedule by id
-    - delete service schedule by id
-    - get service schedule by id
-    - only ADMINISTRATOR can update service schedule
+    Retrieve, update, and delete an individual service schedule.
+
+    Only administrators can manage service schedules.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.ChangeServiceScheduleSerializer
@@ -115,7 +114,7 @@ class ServiceScheduleDetailView(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not fetched.",
-                error="Only ADMINISTRATOR can fetch CLIENT.",
+                error="Only ADMINISTRATOR can fetch service schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -140,7 +139,7 @@ class ServiceScheduleDetailView(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not updated.",
-                error="Only ADMINISTRATOR can update CLIENT.",
+                error="Only ADMINISTRATOR can update service schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
         schedule = self.get_queryset().filter(id=kwargs.get("id")).first()
@@ -189,7 +188,7 @@ class ServiceScheduleDetailView(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not deleted.",
-                error="Only ADMINISTRATOR can delete CLIENT.",
+                error="Only ADMINISTRATOR can delete service schedules.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -211,8 +210,10 @@ class ServiceScheduleDetailView(GenericAPIView):
 
 class ChangeStatusView(GenericAPIView):
     """
-    - View for changing the status of a service schedule.
-    - Only ADMINISTRATOR can change the status of a service schedule."""
+    Change the status of a service schedule.
+
+    Only administrators can change schedule status.
+    """
 
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.ChangeStatusSerializer
@@ -226,7 +227,7 @@ class ChangeStatusView(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not updated.",
-                error="Only ADMINISTRATOR can update CLIENT.",
+                error="Only ADMINISTRATOR can update service schedule status.",
                 status=status.HTTP_403_FORBIDDEN,
             )
         schedule = self.get_queryset().filter(id=kwargs.get("id")).first()
@@ -255,8 +256,9 @@ class ChangeStatusView(GenericAPIView):
 
 class ScheduleSummary(GenericAPIView):
     """
-    - View for retrieving a summary of service schedules.
-    - Only ADMINISTRATOR can retrieve the summary of service schedules.
+    Return summary counts for all service schedules.
+
+    Only administrators can retrieve the schedule summary.
     """
 
     queryset = ServiceSchedule.objects.all()
@@ -269,7 +271,7 @@ class ScheduleSummary(GenericAPIView):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
                 message="Not fetched.",
-                error="Only ADMINISTRATOR can fetch CLIENT.",
+                error="Only ADMINISTRATOR can fetch the schedule summary.",
                 status=status.HTTP_403_FORBIDDEN,
             )
 
