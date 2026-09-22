@@ -151,6 +151,13 @@ class ServiceScheduleDetailView(GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        if schedule.status != "SCHEDULED":
+            return project_return(
+                message="Not updated.",
+                error="Only SCHEDULED schedules can be updated.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         site = Site.objects.filter(id=str(request.data.get("site"))).first()
         if not site:
             return project_return(
@@ -200,6 +207,14 @@ class ServiceScheduleDetailView(GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        if schedule.status == "CANCELLED":
+            return project_return(
+                message="Not cancelled.",
+                error="Schedule is already cancelled.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
         schedule.status = "CANCELLED"
         schedule.save()
         return project_return(
@@ -238,6 +253,13 @@ class ChangeStatusView(GenericAPIView):
                 message="Not updated.",
                 error="Schedule not found.",
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if schedule.status != "SCHEDULED":
+            return project_return(
+                message="Not updated.",
+                error="Only SCHEDULED schedules can be updated.",
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         schedule_obj = self.serializer_class(schedule, data=request.data, partial=True)

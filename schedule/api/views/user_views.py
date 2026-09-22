@@ -146,11 +146,3 @@ class UserScheduleSummaryView(GenericAPIView):
             data=summary_data,
             status=status.HTTP_200_OK,
         )
-
-
-SCHEDULE_STATUS = (
-    ("SCHEDULED", "SCHEDULED"),
-    ("COMPLETED", "COMPLETED"),
-    ("MISSED", "MISSED"),
-    ("CANCELLED", "CANCELLED"),
-)
