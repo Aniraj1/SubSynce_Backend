@@ -11,6 +11,7 @@ from globalutils.returnobject import project_return
 from schedule.api.utils import schedule_date
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
+from django.utils import timezone
 
 
 
@@ -207,4 +208,86 @@ class ServiceScheduleDetailView(GenericAPIView):
         )
 
 
-    
+
+class ChangeStatusView(GenericAPIView):
+    """
+    - View for changing the status of a service schedule.
+    - Only ADMINISTRATOR can change the status of a service schedule."""
+
+    queryset = ServiceSchedule.objects.all()
+    serializer_class = serializer.ChangeStatusSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+
+    @extend_schema(tags=["Service Schedule"])
+    def patch(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not updated.",
+                error="Only ADMINISTRATOR can update CLIENT.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        schedule = self.get_queryset().filter(id=kwargs.get("id")).first()
+
+        if schedule is None:
+            return project_return(
+                message="Not updated.",
+                error="Schedule not found.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        schedule_obj = self.serializer_class(schedule, data=request.data, partial=True)
+        if not schedule_obj.is_valid():
+            return project_return(
+                message="Invalid data.",
+                error=schedule_obj.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        schedule_obj.save()
+        return project_return(
+            message="Successfully updated.",
+            data=self.get_serializer(schedule).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class ScheduleSummary(GenericAPIView):
+    """
+    - View for retrieving a summary of service schedules.
+    - Only ADMINISTRATOR can retrieve the summary of service schedules.
+    """
+
+    queryset = ServiceSchedule.objects.all()
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["Admin: Dashboard"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch CLIENT.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        schedule_obj = self.get_queryset()
+        today = timezone.localdate()
+
+        summary = {
+            "total_schedules": schedule_obj.count(),
+            "scheduled": schedule_obj.filter(status="SCHEDULED").count(),
+            "completed": schedule_obj.filter(status="COMPLETED").count(),
+            "missed": schedule_obj.filter(status="MISSED").count(),
+            "cancelled": schedule_obj.filter(status="CANCELLED").count(),
+            "today_schedules": schedule_obj.filter(scheduled_date=today).count(),
+            "upcoming_schedules": schedule_obj.filter(scheduled_date__gt=today).count(),
+        }
+
+        return project_return(
+            message="Successfully fetched.",
+            data=summary,
+            status=status.HTTP_200_OK,
+        )

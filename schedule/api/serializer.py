@@ -31,10 +31,7 @@ class UserSummarySerializer(serializers.ModelSerializer):
 
 
 class SiteScheduleSerializer(serializers.ModelSerializer):
-    assigned_contractor = UserSummarySerializer(
-        source="assigned_contractors",
-        read_only=True,
-    )
+    assigned_contractor = UserSummarySerializer(read_only=True)
 
     class Meta:
         model = Site
@@ -79,4 +76,11 @@ class ChangeServiceScheduleSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "created_by",
+        ]
+
+class ChangeStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceSchedule
+        fields = [
+            "status",
         ]
