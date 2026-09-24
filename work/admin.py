@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from work.model import workcomplete
+
+
+admin.site.register(workcomplete.CompleteWork)
+admin.site.register(workcomplete.WorkCompleteImage)

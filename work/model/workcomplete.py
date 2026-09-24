@@ -62,7 +62,7 @@ class CompleteWork(BaseModel):
         db_table = "POC_Complete_Work"
 
     def __str__(self):
-        return f"{self.schedule} - {self.status}"
+        return f"{self.id} - {self.status}"
 
 
 
