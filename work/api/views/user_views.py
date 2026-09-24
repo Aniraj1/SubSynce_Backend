@@ -4,7 +4,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from work.model.workcomplete import CompleteWork, WorkCompleteImage
 from client.model.clientmanage import Site
 from schedule.model.cleaningschedule import ServiceSchedule
-from work.api import serializer
+from work.api import serializer, utils
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -14,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django.utils import timezone
 from django.db import transaction
+
 
 
 class ClockInView(GenericAPIView):
@@ -136,5 +137,124 @@ class ClockOutView(GenericAPIView):
         return project_return(
             message="Successfully updated.",
             data=self.get_serializer(work).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class UserWorkView(GenericAPIView):
+    """
+    View to fetch work completion details for a specific schedule.
+    """
+    queryset = CompleteWork.objects.all()
+    serializer_class = serializer.WorkCompleteDetailSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    filterset_fields = ['status', "schedule__scheduled_date"]
+    ordering_fields = ["check_in_time", "check_out_time", "status"]
+    ordering = ["-check_in_time"]
+    search_fields = ["schedule__site__name", "location", "completion_notes"]
+
+    @extend_schema(
+        tags=["User: Work"],
+        parameters=[
+            OpenApiParameter(
+                name="status",
+                description="Filter by work status.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="schedule__scheduled_date",
+                description="Filter by scheduled date (YYYY-MM-DD).",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="q",
+                description="Search by site name, location, or completion notes.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="ordering",
+                description="Order by check-in time, check-out time, or status. Use '-' for descending order.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="period",
+                description="Filter work by daily, weekly, or fornightly periods.",
+                type=str,
+                required=False,
+                enum=["today", "weekly"],
+            ),
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "CONTRACTOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only CONTRACTOR users can fetch their own work details.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        
+        work_obj = self.get_queryset().filter(completed_by=request.user)
+        
+        filter_by_date = utils.filter_work_by_period(
+            work_obj, request.query_params.get("period")
+        )
+        if filter_by_date is not None:
+            work_obj = filter_by_date
+        
+        
+        filter_obj = self.filter_queryset(work_obj)
+
+        data = self.paginate_queryset(filter_obj)
+        schedule_obj = self.serializer_class(data, many=True)
+        return project_return(
+            message="retrieved successfully.",
+            data=self.get_paginated_response(schedule_obj.data),
+            status=status.HTTP_200_OK,
+        )
+
+
+class GetDetailWorkView(GenericAPIView):
+    """
+    Retrieve one work completion detail for the authenticated contractor.
+    """
+    queryset = CompleteWork.objects.all()
+    serializer_class = serializer.DetailWorkSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(tags=["User: Work"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "CONTRACTOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only CONTRACTOR can fetch their own work details.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        
+        work = self.get_queryset().filter(
+            id=str(kwargs.get("id")),
+            completed_by=request.user,
+        ).first()
+
+        if not work:
+            return project_return(
+                message="Invalid work.",
+                error="No work found for this ID.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        work_obj = self.serializer_class(work)
+
+        return project_return(
+            message="retrieved successfully.",
+            data=work_obj.data,
             status=status.HTTP_200_OK,
         )

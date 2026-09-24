@@ -253,8 +253,8 @@ class ServiceScheduleDetailView(GenericAPIView):
 class ChangeStatusView(GenericAPIView):
     """
     Change the status of a service schedule.
-
     Only administrators can change schedule status.
+    - Options: SCHEDULED, COMPLETED, MISSED, CANCELLED
     """
 
     queryset = ServiceSchedule.objects.all()
