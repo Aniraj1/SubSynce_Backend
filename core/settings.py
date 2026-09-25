@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'authuser',
     'client',
     'schedule',
+    'work',
 ]
 
 MIDDLEWARE = [
