@@ -12,7 +12,10 @@ from globalutils.returnobject import project_return
 
 class UserSiteView(GenericAPIView):
     """
-    - Get all sites assigned to the authenticated user
+    List cleaning sites assigned to the authenticated contractor.
+
+    Results are filtered to the requesting contractor and returned with
+    pagination.
     """
 
     queryset = clientmanage.Site.objects.all()

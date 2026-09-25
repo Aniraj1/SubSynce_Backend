@@ -18,6 +18,9 @@ from django.utils import timezone
 class ServiceScheduleView(GenericAPIView):
     """
     Create and list service schedules for administrators.
+
+    Creating a schedule requires a site with an assigned contractor. Listing
+    supports filtering, searching, ordering, and pagination.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.ServiceScheduleSerializer
@@ -125,9 +128,9 @@ class ServiceScheduleView(GenericAPIView):
 
 class ServiceScheduleDetailView(GenericAPIView):
     """
-    Retrieve, update, and cancel an individual service schedule.
+    Retrieve, update, or cancel an individual service schedule.
 
-    Only administrators can manage service schedules.
+    Only authenticated administrators can manage service schedules.
     """
     queryset = ServiceSchedule.objects.all()
     serializer_class = serializer.ChangeServiceScheduleSerializer
@@ -252,9 +255,10 @@ class ServiceScheduleDetailView(GenericAPIView):
 
 class ChangeStatusView(GenericAPIView):
     """
-    Change the status of a service schedule.
-    Only administrators can change schedule status.
-    - Options: SCHEDULED, COMPLETED, MISSED, CANCELLED
+    Change the status of one service schedule.
+
+    Only authenticated administrators can update schedule status. Supported
+    values are SCHEDULED, COMPLETED, MISSED, and CANCELLED.
     """
 
     queryset = ServiceSchedule.objects.all()
@@ -304,9 +308,9 @@ class ChangeStatusView(GenericAPIView):
 
 class ScheduleSummary(GenericAPIView):
     """
-    Return summary counts for all service schedules.
+    Return schedule counts for the administrator dashboard.
 
-    Only administrators can retrieve the schedule summary.
+    The response includes total, status-based, today, and upcoming counts.
     """
 
     queryset = ServiceSchedule.objects.all()

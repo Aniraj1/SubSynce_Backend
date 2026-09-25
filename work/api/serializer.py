@@ -87,3 +87,20 @@ class DetailWorkSerializer(serializers.ModelSerializer):
             "location",
             "images",
         ]
+
+
+class WorkSerializer(serializers.ModelSerializer):
+    site = serializer.SiteScheduleSerializer(source="schedule.site", read_only=True)
+    contractor = serializer.UserSummarySerializer(source="schedule.site.assigned_contractor", read_only=True)
+    scheduled_date = serializers.DateField(source="schedule.scheduled_date", read_only=True)
+    class Meta:
+        model = CompleteWork
+        fields = [
+            "id",
+            "site",
+            "contractor",
+            "status",
+            "check_in_time",
+            "check_out_time",
+            "scheduled_date"
+        ]

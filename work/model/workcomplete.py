@@ -15,7 +15,11 @@ WORK_STATUS = (
 
 class CompleteWork(BaseModel):
     """
-    Records the work performed for one scheduled cleaning service.
+    Record work performed for one scheduled cleaning service.
+
+    ``status`` accepts IN_PROGRESS when work has started, COMPLETED when the
+    contractor has clocked out, or MISSED when the scheduled service was not
+    completed.
     """
     id = models.UUIDField(
         primary_key=True,

@@ -19,7 +19,10 @@ from django.db import transaction
 
 class ClockInView(GenericAPIView):
     """
-    View to handle clock-in and clock-out actions for contractors.
+    Start a scheduled cleaning service for the assigned contractor.
+
+    A contractor can clock in only once for a scheduled service assigned to
+    them.
     """
     queryset = CompleteWork.objects.all()
     serializer_class = serializer.ClockInSerializer
@@ -79,7 +82,10 @@ class ClockInView(GenericAPIView):
 
 class ClockOutView(GenericAPIView):
     """
-    View to handle clock-out actions for contractors.
+    Complete an active cleaning service for the assigned contractor.
+
+    The endpoint records the check-out time, completion notes, location, and
+    any evidence images uploaded with the request.
     """
     queryset = CompleteWork.objects.all()
     serializer_class = serializer.ClockOutSerializer
@@ -143,7 +149,11 @@ class ClockOutView(GenericAPIView):
 
 class UserWorkView(GenericAPIView):
     """
-    View to fetch work completion details for a specific schedule.
+    List the authenticated contractor's work-completion records.
+
+    Results support status/date filtering, period filtering, text search,
+    ordering, and pagination. Work status values are IN_PROGRESS, COMPLETED,
+    and MISSED.
     """
     queryset = CompleteWork.objects.all()
     serializer_class = serializer.WorkCompleteDetailSerializer
@@ -161,7 +171,9 @@ class UserWorkView(GenericAPIView):
         parameters=[
             OpenApiParameter(
                 name="status",
-                description="Filter by work status.",
+                description=(
+                    "Filter by work status: IN_PROGRESS, COMPLETED, or MISSED."
+                ),
                 required=False,
                 type=str,
             ),
@@ -185,7 +197,7 @@ class UserWorkView(GenericAPIView):
             ),
             OpenApiParameter(
                 name="period",
-                description="Filter work by daily, weekly, or fornightly periods.",
+                description="Filter work by today or the current calendar week.",
                 type=str,
                 required=False,
                 enum=["today", "weekly"],
@@ -222,7 +234,9 @@ class UserWorkView(GenericAPIView):
 
 class GetDetailWorkView(GenericAPIView):
     """
-    Retrieve one work completion detail for the authenticated contractor.
+    Retrieve one work-completion record belonging to the contractor.
+
+    A record owned by another contractor is treated as not found.
     """
     queryset = CompleteWork.objects.all()
     serializer_class = serializer.DetailWorkSerializer

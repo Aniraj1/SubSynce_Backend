@@ -15,9 +15,11 @@ from globalutils.returnobject import project_return
 
 class ClientView(GenericAPIView):
     """
-    - Create and list clients
-    - Client fields: first_name, last_name, phone, and email
-    - Only ADMINISTRATOR can create or list CLIENT records
+    Create and list client records.
+
+    Only authenticated administrators can access these operations. Client
+    records contain contact details and are returned with pagination when
+    listed.
     """
 
     queryset = clientmanage.Client.objects.all()
@@ -80,9 +82,9 @@ class ClientView(GenericAPIView):
 
 class UpdateClientView(GenericAPIView):
     """
-    - Client update using first_name, last_name, phone
-    - delete client using id
-    - Only ADMINISTRATOR can update CLIENT
+    Retrieve, partially update, or delete one client record by ID.
+
+    Only authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Client.objects.all()
@@ -187,8 +189,11 @@ class UpdateClientView(GenericAPIView):
 
 class SiteView(GenericAPIView):
     """
-    - Site register using name, address, cleaning_frequency, price, client_id, cleaning_instructions
-    - Only ADMINISTRATOR can create SITE
+    Create and list cleaning sites.
+
+    A site is linked to a client and stores its address, cleaning frequency,
+    per-service price, cleaning instructions, and optional images. Only
+    authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Site.objects.all()
@@ -254,10 +259,9 @@ class SiteView(GenericAPIView):
 
 class UpdateSiteView(GenericAPIView):
     """
-    - Site details update using name, address, cleaning_frequency, price, and cleaning_instructions
-    - delete site using id
-    - Get site details using id
-    - Only ADMINISTRATOR can update SITE
+    Retrieve, partially update, or delete one cleaning site by ID.
+
+    Only authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Site.objects.all()
@@ -353,9 +357,10 @@ class UpdateSiteView(GenericAPIView):
 
 class SiteImageView(GenericAPIView):
     """
-    - Site image upload using site_id and image
-    - Delete all images for a site using site_id
-    - Only ADMINISTRATOR can upload or delete SITE IMAGE
+    Upload or delete all images associated with a cleaning site.
+
+    The site is identified by the URL's ``site_id`` parameter. Only
+    authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.SiteImage.objects.all()

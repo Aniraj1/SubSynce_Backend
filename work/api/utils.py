@@ -3,7 +3,12 @@ from datetime import date, timedelta
 
 def filter_work_by_period(work_obj, period):
     """
-    Filter work based on the specified period (daily, weekly, fortnightly).
+    Filter work by today or the current calendar week.
+
+    ``today`` returns records scheduled today and ``weekly`` returns records
+    scheduled from Monday through Sunday of the current week. A missing or
+    unsupported period returns ``None`` so the caller can keep its original
+    queryset unchanged.
     """
 
     if not period:
