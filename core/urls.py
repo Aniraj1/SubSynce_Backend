@@ -40,6 +40,7 @@ basepatterns = [
     path("api/", include("client.urls")),
     path("api/", include("schedule.urls")),
     path("api/", include("work.urls")),
+    path("api/", include("invoice.urls")),
 
 ]
 
