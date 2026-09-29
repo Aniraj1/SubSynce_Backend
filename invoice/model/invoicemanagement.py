@@ -15,12 +15,6 @@ CONTRACTOR_INVOICE_STATUS = (
     ("REJECTED", "REJECTED"),
 )
 
-CONTRACTOR_VERIFICATION_STATUS = (
-    ("MATCHED", "MATCHED"),
-    ("UNVERIFIED", "UNVERIFIED"),
-    ("MISMATCHED", "MISMATCHED"),
-)
-
 CLIENT_INVOICE_STATUS = (
     ("ISSUED", "ISSUED"),
     ("PAID", "PAID"),
@@ -62,12 +56,6 @@ class ContractorInvoice(BaseModel):
         choices=CONTRACTOR_INVOICE_STATUS,
         default="PENDING",
         db_column="STATUS",
-    )
-    verification_status = models.CharField(
-        max_length=20,
-        choices=CONTRACTOR_VERIFICATION_STATUS,
-        default="UNVERIFIED",
-        db_column="VERIFICATION_STATUS",
     )
     verification_notes = models.TextField(
         blank=True,

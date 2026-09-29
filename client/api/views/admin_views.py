@@ -147,7 +147,6 @@ class UpdateClientView(GenericAPIView):
                 phone=request.data.get("phone").strip()
             ).exclude(id=str(kwargs.get("id"))).exists()
             if check_phone:
-                print("Test")
                 return project_return(
                     message="Not updated.",
                     error="Client with this phone number already exists.",
@@ -385,10 +384,8 @@ class SiteImageView(GenericAPIView):
                 error="Site not found.",
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print("Site: /////", site)
 
         files = request.FILES.getlist("image")
-        print("Files:", files)
         if not files:
             return project_return(
                 message="Not uploaded.",

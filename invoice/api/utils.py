@@ -1,39 +1,45 @@
 
-from datetime import date, timedelta
+from datetime import date
 
-def filter_work_by_period(work_obj, period):
+def filter_invoices_by_date_range(invoices, start_date, end_date):
     """
-    Filter work by today or the current calendar week.
+    Filters the invoices based on the provided start and end dates.
 
-    ``today`` returns records scheduled today and ``weekly`` returns records
-    scheduled from Monday through Sunday of the current week. A missing or
-    unsupported period returns ``None`` so the caller can keep its original
-    queryset unchanged.
+    Args:
+        invoices (QuerySet): The queryset of invoices to filter.
+        start_date (str): The start date in 'YYYY-MM-DD' format.
+        end_date (str): The end date in 'YYYY-MM-DD' format.
     """
-
-    if not period:
-        return None
-
-    today = date.today()
-    period = period.lower()
-    current_week_start = today - timedelta(days=today.weekday())
-    current_week_end = current_week_start + timedelta(days=6)
-    previous_week_start = current_week_start - timedelta(days=7)
-    if period == "today":
-        work_obj = work_obj.filter(
-            schedule__scheduled_date=today
-        )
-        return work_obj
-
+    if start_date:
+        invoices = invoices.filter(invoice_date__gte=date.fromisoformat(start_date))
     
-    if period == "weekly":
-        work_obj = work_obj.filter(
-            schedule__scheduled_date__range=[
-                current_week_start,
-                current_week_end,
-            ]
-        )
-        return work_obj
+    if end_date:
+        invoices = invoices.filter(invoice_date__lte=date.fromisoformat(end_date))
+    
+    if start_date and end_date and date.fromisoformat(start_date) > date.fromisoformat(end_date):
+        return "Start date cannot be after end date."
+
+    return invoices
 
 
-    return None
+def check_date_format(start_date, end_date):
+    """
+    Checks if the provided date string is in the correct 'YYYY-MM-DD' format.
+
+    Args:
+        date_str (str): The date string to check.
+    Returns:
+        bool: True if the date string is in the correct format, False otherwise.
+    """
+
+    try:
+        if start_date:
+            date.fromisoformat(start_date)
+
+        if end_date:
+            date.fromisoformat(end_date)
+
+        return True
+
+    except (ValueError, TypeError):
+        return False
