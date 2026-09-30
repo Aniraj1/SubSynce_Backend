@@ -39,7 +39,7 @@ class SiteInvoiceSerializer(serializers.ModelSerializer):
             "name"
         ]
 
-class VerifiedBySerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
@@ -64,7 +64,7 @@ class GetInvoiceSerializer(serializers.ModelSerializer):
         ]
 
 class DetailInvoiceSerializer(serializers.ModelSerializer):
-    verified_by = VerifiedBySerializer(read_only=True)
+    verified_by = UserSerializer(read_only=True)
     site = SiteInvoiceSerializer(read_only=True)
     class Meta:
         model = ContractorInvoice
@@ -81,4 +81,56 @@ class DetailInvoiceSerializer(serializers.ModelSerializer):
             "verification_notes",
             "verified_by",
             "verified_at",
+        ]
+
+
+
+class InvoiceAdminSerializer(serializers.ModelSerializer):
+    site = SiteInvoiceSerializer(read_only=True)
+    class Meta:
+        model = ContractorInvoice
+        fields = [
+            "id",
+            "invoice_number",
+            "site",
+            "invoice_date",
+            "service_period_start",
+            "service_period_end",
+            "amount",
+            "status",
+            "verification_notes",
+            "verified_by",
+            "verified_at",
+            "remarks",
+            "created_by",
+        ]
+
+class DetailInvoiceAdminSerializer(serializers.ModelSerializer):
+    verified_by = UserSerializer(read_only=True)
+    created_by = UserSerializer(read_only=True)
+    site = SiteInvoiceSerializer(read_only=True)
+    class Meta:
+        model = ContractorInvoice
+        fields = [
+            "id",
+            "invoice_number",
+            "site",
+            "invoice_date",
+            "service_period_start",
+            "service_period_end",
+            "amount",
+            "status",
+            "verification_notes",
+            "verified_by",
+            "verified_at",
+            "remarks",
+            "created_by",
+        ]
+
+class InvoiceVerificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractorInvoice
+        fields = [
+            "status",
+            "verification_notes"
         ]

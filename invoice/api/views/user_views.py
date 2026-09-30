@@ -139,7 +139,9 @@ class InvoiceView(GenericAPIView):
 
 class DetailInvoiceView(GenericAPIView):
     """
-    Retrieve a specific invoice for the authenticated contractor.
+    - Retrieve a specific invoice for the authenticated contractor.
+    - Update a specific invoice for the authenticated contractor.
+    - Delete a specific invoice for the authenticated contractor.
     """
     queryset = ContractorInvoice.objects.all()
     serializer_class = serializer.InvoiceSerializer
@@ -189,6 +191,13 @@ class DetailInvoiceView(GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        if invoice.status == "APPROVED":
+            return project_return(
+                message="Cannot update.",
+                error="Approved invoices cannot be updated.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         invoice_obj = self.serializer_class(invoice, data=request.data, partial=True)
         if not invoice_obj.is_valid():
             return project_return(
@@ -202,6 +211,37 @@ class DetailInvoiceView(GenericAPIView):
         return project_return(
             message="Successfully updated.",
             data=invoice_obj.data,
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(tags=["User: Invoice"])
+    def delete(self, request, *args, **kwargs):
+        if request.user.role != "CONTRACTOR":
+            return project_return(
+                message="Failed to delete.",
+                error="Only CONTRACTOR can delete invoices.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        invoice = self.get_queryset().filter(id=str(kwargs.get("id")), created_by=request.user).first()
+        if not invoice:
+            return project_return(
+                message="Invalid invoice.",
+                error="No invoice found for this ID.",
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if invoice.status == "APPROVED":
+            return project_return(
+                message="Cannot delete.",
+                error="Approved invoices cannot be deleted.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invoice.delete()
+
+        return project_return(
+            message="Successfully deleted.",
             status=status.HTTP_200_OK,
         )
 
