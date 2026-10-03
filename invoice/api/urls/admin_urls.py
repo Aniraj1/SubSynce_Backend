@@ -11,4 +11,5 @@ urlpatterns = [
     path("client-invoice/<str:id>/", admin_views.DetailClientInvoiceView.as_view(), name="DetailClientInvoiceView"),
     path("client-invoice/<str:id>/status/", admin_views.ClientInvoiceStatusUpdateView.as_view(), name="ClientInvoiceStatusUpdateView"),
     path("revenue-report/", admin_views.RevenueReportView.as_view(), name="RevenueReportView"),
+    path("profit-report/", admin_views.ProfitReportView.as_view(), name="ProfitReportView"),
 ]

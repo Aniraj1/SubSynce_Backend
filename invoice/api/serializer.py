@@ -247,3 +247,17 @@ class RevenueFromClientSerializer(serializers.Serializer):
         decimal_places=2,
     )
     invoices = ClientInvoiceDetailsSerializer(many=True)
+
+class ProfitReportSerializer(serializers.Serializer):
+    total_expenditure = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+    total_revenue = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+    profit = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )

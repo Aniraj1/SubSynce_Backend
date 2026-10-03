@@ -1,7 +1,7 @@
 from rest_framework.generics import GenericAPIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from invoice.model.invoicemanagement import ClientInvoice, ContractorInvoice
-from client.model.clientmanage import Site, Client
+from client.model.clientmanage import Site
 from invoice.api import serializer, utils
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -11,7 +11,7 @@ from globalutils.returnobject import project_return
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django.utils import timezone
-from datetime import timedelta, date
+from datetime import  date
 from django.db.models import Sum
 from decimal import Decimal
 
@@ -20,9 +20,9 @@ from decimal import Decimal
 
 class AllInvoiceAdminView(GenericAPIView):
     """
-    List all invoice records for administrators.
+    - List all invoice records for administrators.
 
-    Results support filtering by site, invoice date, and status, as well as
+    - Results support filtering by site, invoice date, and status, as well as
     site-name search, ordering, and pagination. Invoice status values are
     PENDING, PAID, and OVERDUE.
     """
@@ -96,7 +96,8 @@ class AllInvoiceAdminView(GenericAPIView):
 
 class GetDetailInvoiceAdminView(GenericAPIView):
     """
-    Retrieve one invoice record for administrators.
+    - Retrieve one invoice record for administrators.
+
     """
     queryset = ContractorInvoice.objects.all()
     serializer_class = serializer.DetailInvoiceAdminSerializer
@@ -131,7 +132,9 @@ class GetDetailInvoiceAdminView(GenericAPIView):
 
 class InvoiceVerificationView(GenericAPIView):
     """
-    Verify an invoice for administrators.
+    - Verify an invoice for administrators.
+    - Only invoices with a PENDING status can be verified.
+    - The verification process updates the invoice status and records the verifier and timestamp.
     """
     queryset = ContractorInvoice.objects.all()
     serializer_class = serializer.InvoiceVerificationSerializer
@@ -183,7 +186,11 @@ class InvoiceVerificationView(GenericAPIView):
 
 class TotalExpenditureAdminView(GenericAPIView):
     """
-    Retrieve total expenditure for administrators.
+    - Retrieve total expenditure for administrators.
+    - Expenditure is calculated as the total amount from approved contractor invoices.
+    - Optional query parameters:
+        - start_date: Include invoices from this date (YYYY-MM-DD).
+        - end_date: Include invoices through this date (YYYY-MM-DD).
     """
     queryset = ContractorInvoice.objects.all()
     serializer_class = serializer.TotalExpenditureSerializer
@@ -264,6 +271,7 @@ class TotalExpenditureAdminView(GenericAPIView):
 
 class ClientInvoiceViews(GenericAPIView):
     """
+    - Retrieve all client invoices (GET)
     - Create a new client invoice (POST)
     """
     queryset = ClientInvoice.objects.all()
@@ -374,7 +382,8 @@ class ClientInvoiceViews(GenericAPIView):
 
 class DetailClientInvoiceView(GenericAPIView):
     """
-    Retrieve one client invoice record for administrators.
+    - Retrieve one client invoice record for administrators.
+    - Update one client invoice record for administrators.
     """
     queryset = ClientInvoice.objects.all()
     serializer_class = serializer.ClientInvoiceSerializer
@@ -484,6 +493,7 @@ class DetailClientInvoiceView(GenericAPIView):
 class ClientInvoiceStatusUpdateView(GenericAPIView):
     """
     - Update the status of a client invoice (PUT)
+    - Only ADMINISTRATOR users can update the status.
     """
     queryset = ClientInvoice.objects.all()
     serializer_class = serializer.ClientInvoiceStatusUpdateSerializer
@@ -528,7 +538,12 @@ class ClientInvoiceStatusUpdateView(GenericAPIView):
 
 class RevenueReportView(GenericAPIView):
     """
-    Retrieve total revenue from a specific client for administrators.
+    - Retrieve total revenue from a specific client for administrators.
+    - Revenue is calculated as the total amount from paid client invoices.
+    - Optional query parameters:
+        - client_id: Filter by a specific client ID.
+        - start_date: Include invoices from this date (YYYY-MM-DD).
+        - end_date: Include invoices through this date (YYYY-MM-DD).
     """
     queryset = ClientInvoice.objects.all()
     serializer_class = serializer.RevenueFromClientSerializer
@@ -616,5 +631,94 @@ class RevenueReportView(GenericAPIView):
         return project_return(
             message="Successfully retrieved revenue data.",
             data=revenue_obj.data,
+            status=status.HTTP_200_OK,
+        )
+
+class ProfitReportView(GenericAPIView):
+    """
+    - Retrieve total profit for administrators.
+    - Profit is calculated as total revenue from paid client invoices minus total expenditure from approved contractor invoices.
+    - Optional query parameters:
+        - start_date: Include invoices from this date (YYYY-MM-DD).
+    """
+    queryset = ClientInvoice.objects.all()
+    serializer_class = serializer.ProfitReportSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    @extend_schema(
+        tags=["Admin: Profit"],
+        parameters=[
+            OpenApiParameter(
+                name="start_date",
+                description="Include invoices from this date (YYYY-MM-DD).",
+                required=False,
+                type=date,
+            ),
+            OpenApiParameter(
+                name="end_date",
+                description="Include invoices through this date (YYYY-MM-DD).",
+                required=False,
+                type=date,
+            ),
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not allowed.",
+                error="Only ADMINISTRATOR can view total profit.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+
+        check_date_format = utils.check_date_format(start_date, end_date)
+        
+        if check_date_format is False:
+            return project_return(
+                message="Invalid date format.",
+                error="Dates must be in 'YYYY-MM-DD' format.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invoices = utils.filter_invoices_by_date_range(
+            invoices=self.get_queryset().filter(status="PAID"),
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        if isinstance(invoices, str):  # Check if the return is an error message
+            return project_return(
+                message="Invalid date range.",
+                error=invoices,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        invoices = invoices.order_by("-invoice_date")
+
+        total_revenue = invoices.aggregate(
+            total=Sum("amount")
+        )["total"] or Decimal("0.00")
+
+        total_expenditure = ContractorInvoice.objects.filter(
+            status="APPROVED"
+        ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+
+        profit = total_revenue - total_expenditure
+
+        profit_data = {
+            "total_expenditure": total_expenditure,
+            "total_revenue": total_revenue,
+            "profit": profit,
+        }
+
+        profit_obj = self.get_serializer(instance=profit_data)
+
+        return project_return(
+            message="Successfully retrieved profit data.",
+            data=profit_obj.data,
             status=status.HTTP_200_OK,
         )
