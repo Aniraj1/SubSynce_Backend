@@ -1,6 +1,17 @@
 # SubSync Backend
 
-Django REST API for the SubSync project.
+SubSync is a Django REST API for managing cleaning businesses.
+
+The system manages:
+
+- Users and roles
+- Clients and cleaning sites
+- Contractor assignments
+- Cleaning schedules
+- Completed cleaning work
+- Contractor invoices
+- Client invoices
+- Revenue, expenditure, profit, and dashboards
 
 ## Requirements
 
@@ -8,9 +19,9 @@ Django REST API for the SubSync project.
 - Windows PowerShell
 - Git
 
-## Installation
+## Setup
 
-Open PowerShell in the project directory:
+Open PowerShell in the backend directory:
 
 ```powershell
 cd "C:\path\to\backend"
@@ -49,9 +60,9 @@ DB_NAME=db.sqlite3
 
 Do not use development secrets in production. Keep real secrets out of source control.
 
-## Database Setup
+## Database
 
-After activating the virtual environment:
+After activating the virtual environment, run:
 
 ```powershell
 python manage.py check
@@ -65,7 +76,7 @@ Create a Django admin user when needed:
 python manage.py createsuperuser
 ```
 
-## Run the Server
+## Run the API
 
 ```powershell
 python manage.py runserver
@@ -79,16 +90,42 @@ The API is available at `http://127.0.0.1:8000/`.
 - OpenAPI schema: `http://127.0.0.1:8000/api/schema/`
 - ReDoc: `http://127.0.0.1:8000/api/redoc/`
 
-## API Route Groups
+## Main API Groups
 
 - `/api/v1/admin/`
 - `/api/v1/owner/`
 - `/api/v1/user/`
 
-Authentication uses JWT access and refresh tokens. Send an access token to protected endpoints with:
+Most endpoints require a JWT access token:
 
 ```text
 Authorization: Bearer <access-token>
+```
+
+## Important Endpoints
+
+### Contractor
+
+- `/api/v1/user/schedule/` - View assigned schedules
+- `/api/v1/user/clock-in/` - Start scheduled work
+- `/api/v1/user/clock-out/<id>/` - Complete work
+- `/api/v1/user/invoices/` - Submit and view contractor invoices
+- `/api/v1/user/dashboard/` - View the contractor dashboard
+
+### Administrator
+
+- `/api/v1/admin/client/` - Manage clients
+- `/api/v1/admin/site/` - Manage sites
+- `/api/v1/admin/schedule/` - Manage schedules
+- `/api/v1/admin/work/` - Review completed work
+- `/api/v1/admin/invoices/` - Review contractor invoices
+- `/api/v1/admin/client-invoice/` - Manage client invoices
+- `/api/v1/admin/dashboard/` - View the administrator dashboard
+
+Dashboard date filters use:
+
+```text
+?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
 ```
 
 ## User Roles
