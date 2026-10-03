@@ -256,6 +256,7 @@ class TotalEarningsView(GenericAPIView):
     invoice number, ID, amount, and service period for each invoice.
     """
     queryset = ContractorInvoice.objects.all()
+    serializer_class = serializer.TotalIncomeSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
@@ -312,27 +313,20 @@ class TotalEarningsView(GenericAPIView):
 
         invoices = invoices.order_by("-invoice_date")
 
-        total_earnings = invoices.aggregate(
+        total_income = invoices.aggregate(
             total=Sum("amount")
         )["total"] or 0
 
-        invoice_data = [
-            {
-                "id": str(invoice.id),
-                "invoice_number": invoice.invoice_number,
-                "amount": str(invoice.amount),
-                "service_period_start": invoice.service_period_start,
-                "service_period_end": invoice.service_period_end,
-            }
-            for invoice in invoices
-        ]
+        income_data = {
+            "invoice_count": invoices.count(),
+            "total_income": total_income,
+            "invoices": invoices,
+        }
+
+        income_obj = self.get_serializer(instance=income_data)
 
         return project_return(
             message="Successfully fetched total earnings.",
-            data={
-                "invoice_count": invoices.count(),
-                "total_earnings": f"${total_earnings:.2f}",
-                "invoices": invoice_data,
-            },
+            data=income_obj.data,
             status=status.HTTP_200_OK,
         )
