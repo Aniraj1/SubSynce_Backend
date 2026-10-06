@@ -40,6 +40,7 @@ class CustomUserManager(UserManager):
     ):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)   
+        extra_fields.setdefault("role", "OWNER")
         return self._create_user(username, email, password, **extra_fields)
 
 
