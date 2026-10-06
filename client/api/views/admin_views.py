@@ -15,9 +15,11 @@ from globalutils.returnobject import project_return
 
 class ClientView(GenericAPIView):
     """
-    - Create and list clients
-    - Client fields: first_name, last_name, phone, and email
-    - Only ADMINISTRATOR can create or list CLIENT records
+    Create and list client records.
+
+    Only authenticated administrators can access these operations. Client
+    records contain contact details and are returned with pagination when
+    listed.
     """
 
     queryset = clientmanage.Client.objects.all()
@@ -26,7 +28,7 @@ class ClientView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def post(self, request, *args, **kwargs):
         client_obj = self.serializer_class(data=request.data)
         if request.user.role != "ADMINISTRATOR":
@@ -59,7 +61,7 @@ class ClientView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -80,9 +82,9 @@ class ClientView(GenericAPIView):
 
 class UpdateClientView(GenericAPIView):
     """
-    - Client update using first_name, last_name, phone
-    - delete client using id
-    - Only ADMINISTRATOR can update CLIENT
+    Retrieve, partially update, or delete one client record by ID.
+
+    Only authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Client.objects.all()
@@ -91,7 +93,7 @@ class UpdateClientView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def get(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not client_query:
@@ -115,7 +117,7 @@ class UpdateClientView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def put(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not client_query:
@@ -145,7 +147,6 @@ class UpdateClientView(GenericAPIView):
                 phone=request.data.get("phone").strip()
             ).exclude(id=str(kwargs.get("id"))).exists()
             if check_phone:
-                print("Test")
                 return project_return(
                     message="Not updated.",
                     error="Client with this phone number already exists.",
@@ -159,7 +160,7 @@ class UpdateClientView(GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(tags=["client"])
+    @extend_schema(tags=["Admin: Client"])
     def delete(self, request, *args, **kwargs):
         client_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not client_query:
@@ -187,8 +188,11 @@ class UpdateClientView(GenericAPIView):
 
 class SiteView(GenericAPIView):
     """
-    - Site register using name, address, cleaning_frequency, price, client_id, cleaning_instructions
-    - Only ADMINISTRATOR can create SITE
+    Create and list cleaning sites.
+
+    A site is linked to a client and stores its address, cleaning frequency,
+    per-service price, cleaning instructions, and optional images. Only
+    authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Site.objects.all()
@@ -197,7 +201,7 @@ class SiteView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def post(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -234,13 +238,29 @@ class SiteView(GenericAPIView):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    @extend_schema(tags=["Admin: Site"])
+    def get(self, request, *args, **kwargs):
+        if request.user.role != "ADMINISTRATOR":
+            return project_return(
+                message="Not fetched.",
+                error="Only ADMINISTRATOR can fetch SITE.",
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        filter_obj = self.filter_queryset(self.get_queryset())
+        data = self.paginate_queryset(filter_obj)
+        site_obj = self.serializer_class(data, many=True)
+        return project_return(
+            message="Successfully fetched.",
+            data=self.get_paginated_response(site_obj.data),
+            status=status.HTTP_200_OK,
+        )
+
 
 class UpdateSiteView(GenericAPIView):
     """
-    - Site details update using name, address, cleaning_frequency, price, and cleaning_instructions
-    - delete site using id
-    - Get site details using id
-    - Only ADMINISTRATOR can update SITE
+    Retrieve, partially update, or delete one cleaning site by ID.
+
+    Only authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.Site.objects.all()
@@ -249,7 +269,7 @@ class UpdateSiteView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def put(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=kwargs.get("id")).first()
         if not site_query:
@@ -282,7 +302,8 @@ class UpdateSiteView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not site_query:
@@ -306,7 +327,8 @@ class UpdateSiteView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+    @extend_schema(tags=["Admin: Site"])
     def get(self, request, *args, **kwargs):
         site_query = self.get_queryset().filter(id=str(kwargs.get("id"))).first()
         if not site_query:
@@ -334,9 +356,10 @@ class UpdateSiteView(GenericAPIView):
 
 class SiteImageView(GenericAPIView):
     """
-    - Site image upload using site_id and image
-    - Delete all images for a site using site_id
-    - Only ADMINISTRATOR can upload or delete SITE IMAGE
+    Upload or delete all images associated with a cleaning site.
+
+    The site is identified by the URL's ``site_id`` parameter. Only
+    authenticated administrators can access these operations.
     """
 
     queryset = clientmanage.SiteImage.objects.all()
@@ -345,7 +368,7 @@ class SiteImageView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def post(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -361,10 +384,8 @@ class SiteImageView(GenericAPIView):
                 error="Site not found.",
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print("Site: /////", site)
 
         files = request.FILES.getlist("image")
-        print("Files:", files)
         if not files:
             return project_return(
                 message="Not uploaded.",
@@ -391,7 +412,9 @@ class SiteImageView(GenericAPIView):
         )
 
 
-    @extend_schema(tags=["site"])
+
+
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
@@ -431,10 +454,11 @@ class RemoveSiteImageView(GenericAPIView):
 
     queryset = clientmanage.SiteImage.objects.all()
     authentication_classes = [JWTAuthentication]
+    serializer_class = None
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["site"])
+    @extend_schema(tags=["Admin: Site"])
     def delete(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(

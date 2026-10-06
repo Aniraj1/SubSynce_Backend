@@ -44,6 +44,11 @@ api_patterns = [
     ),
     path("api/", include("authuser.urls")),
     path("api/", include("client.urls")),
+    path("api/", include("schedule.urls")),
+    path("api/", include("work.urls")),
+    path("api/", include("invoice.urls")),
+    path("api/", include("dashboard.urls"))
+
 ]
 
 urlpatterns = [

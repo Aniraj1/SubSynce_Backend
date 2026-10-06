@@ -29,7 +29,7 @@ class UserRegister(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["Owner: Authuser"])
     def post(self, request, *args, **kwargs):
         user_obj = self.serializer_class(data=request.data)
 

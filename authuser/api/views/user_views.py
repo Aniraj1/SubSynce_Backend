@@ -27,7 +27,7 @@ class UserLogin(GenericAPIView):
     serializer_class = serializer.UserLoginSerializer
     throttle_classes = [AnonRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def post(self, request, *args, **kwargs):
         request_obj = self.serializer_class(data=request.data)
         if not request_obj.is_valid():
@@ -75,7 +75,7 @@ class UserDetail(GenericAPIView):
     throttle_classes = [UserRateThrottle]
 
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def post(self, request, *args, **kwargs):
         user_obj = self.serializer_class(data=request.data)
         
@@ -107,7 +107,7 @@ class UserDetail(GenericAPIView):
         )
         
     
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def put(self, request, *args, **kwargs):
         user_detail_obj = models.UserDetail.objects.filter(
             user=request.user
@@ -146,7 +146,7 @@ class UserDetailView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def get(self, request, *args, **kwargs):
         user_obj = self.serializer_class(
             self.get_queryset().objects.filter(id=request.user.id).first()  
@@ -167,7 +167,7 @@ class UserLogout(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def post(self, request, *args, **kwargs):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
@@ -197,7 +197,7 @@ class GenerateTokenFromRefresh(TokenViewBase):
     serializer_class = TokenRefreshSerializer
     throttle_classes = [AnonRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def post(self, request, *args, **kwargs):
         token_obj = self.get_serializer(data=request.data)
         if not request.data.get("refresh"):
@@ -227,7 +227,7 @@ class LoginUserChangePasswordView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["User: Authuser"])
     def put(self, request, *args, **kwargs):
         request_obj = self.serializer_class(data=request.data)
         if not request_obj.is_valid():

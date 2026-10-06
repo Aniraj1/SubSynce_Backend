@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from authuser.model.softdeletemodel import BaseModel
+from authuser.model.user import User
 
 
 
@@ -46,6 +47,7 @@ class Site(BaseModel):
         db_column="CLIENT_ID",
     )
     cleaning_instructions = models.TextField(blank=True, null=True, db_column="CLEANING_INSTRUCTIONS")
+    assigned_contractor = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name="contractors", db_column="ASSIGNED_CONTRACTOR")
     
     class Meta:
         db_table = "POC_SITE"

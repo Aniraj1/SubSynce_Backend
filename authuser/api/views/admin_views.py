@@ -18,8 +18,9 @@ from globalutils.returnobject import project_return
 
 class ContractorRegisterView(GenericAPIView):
     """
-    - Contractor register using username, email, password
-    - Only ADMINISTRATOR can create CONTRACTOR users
+    Create a contractor account using a username, email, and password.
+
+    Only authenticated administrators can create contractor accounts.
     """
 
     queryset = models.User
@@ -28,7 +29,7 @@ class ContractorRegisterView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["Admin: Authuser"])
     def post(self, request, *args, **kwargs):
         user_obj = self.serializer_class(data=request.data)
         if request.user.role != "ADMINISTRATOR":
@@ -80,8 +81,10 @@ class ContractorRegisterView(GenericAPIView):
 
 class ListOfContractorsView(GenericAPIView):
     """
-    - List all contractors
-    - Only ADMINISTRATOR can view the contractor list
+    List contractor accounts for administrators.
+
+    Results are filtered and paginated using the project's default DRF
+    configuration.
     """
 
     queryset = models.User.objects.filter(role="CONTRACTOR")
@@ -90,7 +93,7 @@ class ListOfContractorsView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["authuser"])
+    @extend_schema(tags=["Admin: Authuser"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(  
