@@ -15,6 +15,7 @@ class ContractorInvoiceFactory(factory.Factory):
     invoice_date = fake.date_this_year()
     service_period_start = fake.date_this_year()
     service_period_end = fake.date_this_year()
+    gst = fake.boolean()
     amount = fake.pydecimal(left_digits=5, right_digits=2, positive=True)
     status = "PENDING"
     verification_notes = fake.text(max_nb_chars=200)
@@ -34,6 +35,7 @@ class ClientInvoiceFactory(factory.Factory):
     invoice_date = fake.date_this_year()
     service_period_start = fake.date_this_year()
     service_period_end = fake.date_this_year()
+    gst = fake.boolean()
     amount = fake.pydecimal(left_digits=5, right_digits=2, positive=True)
     status = "ISSUED"
     remarks = fake.text(max_nb_chars=200)

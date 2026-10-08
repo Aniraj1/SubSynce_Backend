@@ -45,6 +45,10 @@ class ContractorInvoice(BaseModel):
     service_period_end = models.DateField(
         db_column="SERVICE_PERIOD_END",
     )
+    gst = models.BooleanField(
+            default=False,
+            db_column="GST",
+        )
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -119,6 +123,10 @@ class ClientInvoice(BaseModel):
     )
     service_period_end = models.DateField(
         db_column="SERVICE_PERIOD_END",
+    )
+    gst = models.BooleanField(
+        default=False,
+        db_column="GST",
     )
     amount = models.DecimalField(
         max_digits=10,
