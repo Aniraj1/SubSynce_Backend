@@ -105,7 +105,7 @@ class WorkCompleteDetailView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_classes = [UserRateThrottle]
 
-    @extend_schema(tags=["User: Admin"])
+    @extend_schema(tags=["Admin: Work"])
     def get(self, request, *args, **kwargs):
         if request.user.role != "ADMINISTRATOR":
             return project_return(
