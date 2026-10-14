@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block force_light_theme %}true{% endblock %}
+{% load static %}
+
+{% block title %}Login - SubSync{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex bg-[#FBFBFB] text-[#222222]">
+
+    <!-- Left: branding panel (desktop only) -->
+    <aside class="hidden lg:flex flex-col justify-center w-[460px] xl:w-[595px] shrink-0 px-10 xl:px-14 py-12 bg-gradient-to-b from-[#F3F2F1] via-[#F7F2EE] to-[#FCEADB] shadow-[4px_0_24px_rgba(0,0,0,0.04)] relative z-10">
+        <div class="flex items-center gap-3 mb-14">
+            <span class="w-3 h-3 rounded-full bg-[#F27E22] shadow-[0_0_10px_rgba(242,126,34,0.5)]"></span>
+            <span class="text-2xl font-medium">SubSync</span>
+        </div>
+
+        <span class="inline-flex self-start items-center gap-2 px-3 py-1.5 rounded-full bg-[#FAF2E8] text-[#F27E22] text-sm">
+            <span class="material-symbols-outlined" style="font-size: 16px;">verified_user</span>
+            Secure. Role-based. Built for teams.
+        </span>
+
+        <h1 class="mt-6 text-[32px] leading-[1.05] font-semibold">
+            Smart contractor<br>management, <span class="text-[#F27E22]">simplified.</span>
+        </h1>
+        <p class="mt-5 max-w-[460px] text-[15px] leading-relaxed text-[#494949]">
+            SubSync helps administrators and contractors collaborate securely, stay aligned, and get work done — all in one place.
+        </p>
+
+        <img src="{% static 'images/login-illustration.svg' %}" alt="SubSync role-based access illustration"
+             class="mt-10 w-full max-w-[343px]">
+
+        <ul class="mt-12 grid grid-cols-3 gap-6 max-w-[470px]">
+            <li>
+                <span class="w-9 h-9 rounded-full bg-[#FAF2E8] flex items-center justify-center text-[#F27E22]"><span class="material-symbols-outlined" style="font-size: 18px;">account_circle</span></span>
+                <p class="mt-3 text-xs font-medium">Role-based access</p>
+                <p class="text-xs text-[#494949]">Secure by design</p>
+            </li>
+            <li>
+                <span class="w-9 h-9 rounded-full bg-[#FAF2E8] flex items-center justify-center text-[#F27E22]"><span class="material-symbols-outlined" style="font-size: 18px;">verified_user</span></span>
+                <p class="mt-3 text-xs font-medium">Data you can trust</p>
+                <p class="text-xs text-[#494949]">Encrypted &amp; protected</p>
+            </li>
+            <li>
+                <span class="w-9 h-9 rounded-full bg-[#FAF2E8] flex items-center justify-center text-[#F27E22]"><span class="material-symbols-outlined" style="font-size: 18px;">visibility</span></span>
+                <p class="mt-3 text-xs font-medium">Audit &amp; visibility</p>
+                <p class="text-xs text-[#494949]">Track and monitor</p>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Right: login card -->
+    <main class="flex-1 min-w-0 relative overflow-hidden flex items-center justify-center px-4 py-12">
+        <!-- Subtle concentric orange arcs behind the card -->
+        <div aria-hidden="true" class="pointer-events-none absolute left-1/2 top-1/2 translate-x-[-20%] translate-y-[-30%]">
+            <div class="absolute -translate-x-1/2 -translate-y-1/2 w-[620px] h-[620px] rounded-full border border-[#F27E22]/15"></div>
+            <div class="absolute -translate-x-1/2 -translate-y-1/2 w-[780px] h-[780px] rounded-full border border-[#F27E22]/10"></div>
+            <div class="absolute -translate-x-1/2 -translate-y-1/2 w-[940px] h-[940px] rounded-full border border-[#F27E22]/[0.07]"></div>
+        </div>
+
+        <div class="relative w-full max-w-[532px]">
+            <!-- Mobile-only logo -->
+            <div class="lg:hidden flex items-center justify-center gap-2 mb-6">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#F27E22]"></span>
+                <span class="text-xl font-medium">SubSync</span>
+            </div>
+
+            <div class="bg-white rounded-lg border border-[#E9E2DC] shadow-[0_4px_24px_rgba(0,0,0,0.04)] px-6 sm:px-10 py-12">
+                <div class="text-center">
+                    <h2 class="text-[22px] font-semibold">Welcome back <span aria-hidden="true">👋</span></h2>
+                    <p class="mt-1 text-[15px] text-[#494949]">Sign in to your SubSync account</p>
+                </div>
+
+                <form method="post" action="{{ request.get_full_path }}" class="mt-12">
+                    {% csrf_token %}
+                    {% with field='w-full h-11 pl-11 rounded-md border border-[#494949]/25 bg-white text-sm placeholder:text-[#494949]/60 focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30 focus:border-[#F27E22]' %}
+                    <!-- Email or username: the view resolves an email to its user, otherwise treats it as a username -->
+                    <label for="username" class="block text-sm font-medium mb-2">Email or Username</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">person</span>
+                        <input type="text" id="username" name="username" value="{{ identifier }}" required
+                               autocomplete="username" placeholder="Enter your email or username"
+                               class="{{ field }} pr-4">
+                    </div>
+
+                    <label for="password" class="block text-sm font-medium mt-6 mb-2">Password</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">lock</span>
+                        <input type="password" id="password" name="password" required autocomplete="current-password"
+                               placeholder="Enter your password" class="{{ field }} pr-12">
+                        <button type="button" id="toggle-password" aria-label="Show password"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#494949] hover:text-[#222222]">
+                            <span class="material-symbols-outlined" id="toggle-password-icon" style="font-size: 18px;">visibility_off</span>
+                        </button>
+                    </div>
+                    {% endwith %}
+
+                    <div class="flex items-center justify-between mt-6">
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <input type="checkbox" name="remember_me" value="1" checked class="w-4 h-4 accent-[#F27E22]">
+                            Remember Me
+                        </label>
+                        <a href="{% url 'ops:password_reset' %}" class="text-sm text-[#F27E22] hover:underline">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit"
+                            class="mt-10 w-full h-12 rounded-lg bg-[#F27E22] hover:bg-primary-hover text-white text-base font-medium flex items-center justify-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+                        Sign in
+                    </button>
+                </form>
+
+                <div class="mt-10 text-center text-xs text-[#494949]">
+                    <p class="flex items-center justify-center gap-1.5">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">verified_user</span>
+                        Secure access
+                    </p>
+                    <!-- No Terms/Privacy pages exist yet -->
+                    <p class="mt-5 leading-relaxed">
+                        By signing in, you agree to SubSync's <a href="#" class="text-[#F27E22] hover:underline">Terms of Service</a><br>
+                        and <a href="#" class="text-[#F27E22] hover:underline">Privacy Policy.</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var toggleBtn = document.getElementById('toggle-password');
+        var passwordInput = document.getElementById('password');
+        var icon = document.getElementById('toggle-password-icon');
+
+        toggleBtn.addEventListener('click', function () {
+            var isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            icon.textContent = isHidden ? 'visibility' : 'visibility_off';
+            toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+    })();
+</script>
+{% endblock %}

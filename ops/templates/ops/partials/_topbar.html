@@ -1,0 +1,16 @@
+{# Shared top bar with the logged-in user's real name and role. #}
+{# Optional: `display_name` / `role_label` override the defaults (used by the contractor portal). #}
+<header class="sticky top-0 z-30 bg-white border-b border-surface-container-high">
+    <div class="ui-topbar-inner flex items-center justify-end px-4 lg:px-6 py-3 gap-2 sm:gap-3">
+        <button type="button" data-sidebar-open aria-label="Open menu" aria-expanded="false"
+                class="ui-icon-btn lg:hidden mr-auto p-2 rounded-xl border border-surface-container-high hover:bg-surface-container transition-colors">
+            <span class="material-symbols-outlined text-ink-light" style="font-size: 20px;">menu</span>
+        </button>
+
+        <button type="button" data-theme-toggle class="ui-icon-btn p-2 rounded-xl border border-surface-container-high hover:bg-surface-container transition-colors" title="Toggle theme">
+            <span class="material-symbols-outlined text-ink-light" style="font-size: 20px;" data-theme-icon aria-hidden="true">light_mode</span>
+        </button>
+
+        {% include 'ops/partials/_account_menu.html' %}
+    </div>
+</header>

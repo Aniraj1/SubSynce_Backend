@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="44" viewBox="0 0 180 44" role="img" aria-label="SubSync">
+  <rect x="0" y="2" width="40" height="40" rx="10" fill="#F4842B"/>
+  <path d="M27.5 15.5c-1.4-1.6-3.6-2.5-6-2.5-3.9 0-6.6 2-6.6 5 0 6.2 11.6 3.6 11.6 8 0 1.4-1.5 2.5-4.2 2.5-2.4 0-4.4-1-5.7-2.6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+  <text x="50" y="30" font-family="Poppins, system-ui, sans-serif" font-size="22" font-weight="700" fill="#222221">SubSync</text>
+</svg>

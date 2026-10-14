@@ -1,0 +1,48 @@
+{# Line items editor shared by both invoice builders. Needs invoice_builder.js. #}
+<section class="p-5 card" aria-labelledby="items-heading">
+    <div class="flex items-center justify-between mb-3">
+        <h2 id="items-heading" class="ui-section-title text-base font-semibold text-ink">Line Items</h2>
+        <button type="button" id="add-item" class="ui-btn ui-btn-secondary ui-btn-sm inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">add</span>Add Line
+        </button>
+    </div>
+    <div class="hidden sm:grid grid-cols-12 gap-2 text-xs uppercase tracking-wider text-ink-light pb-2">
+        <span class="col-span-6">Description</span><span class="col-span-2">Qty</span><span class="col-span-2">Unit price</span><span class="col-span-2 text-right">Total</span>
+    </div>
+    <div id="items" class="space-y-3">
+        {% for form in formset %}
+        <div class="item-row grid grid-cols-12 gap-2 items-start">
+            <div class="col-span-12 sm:col-span-6">
+                <input name="items-{{ forloop.counter0 }}-description" value="{{ form.description.value|default:'' }}" class="field-input" placeholder="e.g. Weekly office clean…" aria-label="Description" required maxlength="200">
+                {% if form.description.errors %}<p class="text-xs text-error mt-1">{{ form.description.errors|join:" " }}</p>{% endif %}
+            </div>
+            <div class="col-span-4 sm:col-span-2">
+                <input name="items-{{ forloop.counter0 }}-quantity" value="{{ form.quantity.value|default:'1' }}" class="field-input tabular-nums" type="number" min="0.01" step="0.01" inputmode="decimal" aria-label="Quantity" required>
+                {% if form.quantity.errors %}<p class="text-xs text-error mt-1">{{ form.quantity.errors|join:" " }}</p>{% endif %}
+            </div>
+            <div class="col-span-4 sm:col-span-2">
+                <input name="items-{{ forloop.counter0 }}-unit_price" value="{{ form.unit_price.value|default:'' }}" class="field-input tabular-nums" type="number" min="0" step="0.01" inputmode="decimal" aria-label="Unit price" placeholder="0.00" required>
+                {% if form.unit_price.errors %}<p class="text-xs text-error mt-1">{{ form.unit_price.errors|join:" " }}</p>{% endif %}
+            </div>
+            <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-1 pt-2.5">
+                <span class="line-total font-semibold tabular-nums text-ink">$0.00</span>
+                <button type="button" class="remove-item p-1 rounded-lg text-ink-light hover:text-error" aria-label="Remove line">
+                    <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">close</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<template id="item-template">
+    <div class="item-row grid grid-cols-12 gap-2 items-start">
+        <div class="col-span-12 sm:col-span-6"><input name="items-__i__-description" class="field-input" placeholder="e.g. Weekly office clean…" aria-label="Description" required maxlength="200"></div>
+        <div class="col-span-4 sm:col-span-2"><input name="items-__i__-quantity" value="1" class="field-input tabular-nums" type="number" min="0.01" step="0.01" inputmode="decimal" aria-label="Quantity" required></div>
+        <div class="col-span-4 sm:col-span-2"><input name="items-__i__-unit_price" class="field-input tabular-nums" type="number" min="0" step="0.01" inputmode="decimal" aria-label="Unit price" placeholder="0.00" required></div>
+        <div class="col-span-4 sm:col-span-2 flex items-center justify-end gap-1 pt-2.5">
+            <span class="line-total font-semibold tabular-nums text-ink">$0.00</span>
+            <button type="button" class="remove-item p-1 rounded-lg text-ink-light hover:text-error" aria-label="Remove line"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">close</span></button>
+        </div>
+    </div>
+</template>

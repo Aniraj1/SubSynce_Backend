@@ -1,0 +1,95 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}{{ site.name }} - SubSync{% endblock %}
+
+{% block page %}
+<nav class="flex flex-wrap items-center gap-1.5 text-xs text-ink-light mb-3" aria-label="Breadcrumb">
+    <a href="{% url 'ops:my_sites' %}" class="hover:text-primary">Sites</a>
+    <span class="material-symbols-outlined" style="font-size: 14px;" aria-hidden="true">chevron_right</span>
+    <span class="text-ink">{{ site.name }}</span>
+</nav>
+<div class="ui-page-header">
+    <div class="min-w-0">
+        <h1 class="ui-title break-words">{{ site.name }}</h1>
+        <p class="ui-subtitle break-words">{{ site.address }}</p>
+    </div>
+    <a href="https://www.google.com/maps/search/?api=1&query={{ site.address|urlencode }}" target="_blank" rel="noopener"
+       class="ui-btn ui-btn-secondary self-start sm:self-auto">
+        <span class="material-symbols-outlined" aria-hidden="true">map</span>Open in Maps
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <!-- Site details (no price: that is what the client is charged) -->
+    <section class="card p-5 lg:col-span-2" aria-labelledby="details-heading">
+        <h2 id="details-heading" class="ui-section-title mb-4">Site details</h2>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <div><dt class="text-ink-light text-xs">Client</dt><dd class="mt-1 font-medium text-ink">{{ site.client_id.first_name }} {{ site.client_id.last_name|default:'' }}</dd></div>
+            <div><dt class="text-ink-light text-xs">Frequency</dt><dd class="mt-1"><span class="px-2 py-0.5 rounded-md bg-surface-container text-ink text-xs font-medium">{{ site.cleaning_frequency|lower|capfirst }}</span></dd></div>
+            <div class="sm:col-span-2"><dt class="text-ink-light text-xs">Address</dt><dd class="mt-1 font-medium text-ink break-words">{{ site.address }}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-ink-light text-xs">Cleaning instructions</dt><dd class="mt-1 text-ink whitespace-pre-line break-words">{{ site.cleaning_instructions|default:"No instructions added. Check with the office if you're unsure." }}</dd></div>
+        </dl>
+    </section>
+
+    <!-- Upcoming services at this site -->
+    <section class="card p-5" aria-labelledby="upcoming-heading">
+        <h2 id="upcoming-heading" class="ui-section-title mb-2">Upcoming services</h2>
+        {% if upcoming %}
+        <ul class="divide-y divide-surface-container">
+            {% for job in upcoming %}
+            <li class="py-2.5 flex items-center justify-between gap-3">
+                <a href="{% url 'ops:my_job_detail' job.id %}" class="text-sm font-medium text-ink hover:text-primary hover:underline">{{ job.scheduled_date|date:"D j M" }}</a>
+                <span class="text-xs text-ink-light tabular-nums">{{ job.scheduled_time|time:"g:i A" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="ui-empty !py-6"><span class="material-symbols-outlined" aria-hidden="true">event_upcoming</span>Nothing scheduled.</div>
+        {% endif %}
+    </section>
+</div>
+
+<!-- Photos -->
+<section class="card p-5 mb-4" aria-labelledby="photos-heading">
+    <h2 id="photos-heading" class="ui-section-title mb-4">Photos <span class="text-ink-light font-normal text-sm">({{ site.images.all|length }})</span></h2>
+    {% if site.images.all %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {% for img in site.images.all %}
+        <a href="{{ img.image.url }}" target="_blank" rel="noopener" title="Open full size"
+           class="block aspect-[4/3] rounded-xl overflow-hidden border border-surface-container-high bg-surface-container hover:opacity-90 transition-opacity">
+            <img src="{{ img.image.url }}" alt="{{ site.name }} photo {{ forloop.counter }}" loading="lazy" class="w-full h-full object-cover">
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ui-empty !py-6"><span class="material-symbols-outlined" aria-hidden="true">image</span>No photos of this site yet.</div>
+    {% endif %}
+</section>
+
+<!-- Your work here -->
+<section class="card overflow-hidden" aria-labelledby="work-heading">
+    <h2 id="work-heading" class="ui-section-title px-5 py-4">Your work at this site</h2>
+    {% if my_work %}
+    <div class="overflow-x-auto">
+        <table class="ui-table w-full min-w-[520px] text-sm">
+            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                <tr><th class="px-5 py-2">Date</th><th class="px-5 py-2">Check-in</th><th class="px-5 py-2">Check-out</th><th class="px-5 py-2">Status</th></tr>
+            </thead>
+            <tbody class="divide-y divide-surface-container">
+                {% for w in my_work %}
+                <tr class="hover:bg-surface/60">
+                    <td class="px-5 py-3"><a href="{% url 'ops:work_detail' w.id %}" class="font-medium text-ink hover:text-primary">{{ w.schedule.scheduled_date|date:"j M Y" }}</a></td>
+                    <td class="px-5 py-3 tabular-nums">{{ w.check_in_time|time:"g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3 tabular-nums">{{ w.check_out_time|time:"g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3"><span class="pill pill-{{ w.status|lower }}">{{ w.status|label }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="ui-empty border-t border-surface-container-high"><span class="material-symbols-outlined" aria-hidden="true">history</span>You haven't recorded work here yet.</div>
+    {% endif %}
+</section>
+{% endblock %}

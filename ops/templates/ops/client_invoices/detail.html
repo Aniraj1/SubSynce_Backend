@@ -1,0 +1,110 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}{{ invoice.invoice_number }} - SubSync{% endblock %}
+
+{% block page %}
+<a href="{% url 'ops:client_invoices' %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4">
+    <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>Client Invoices
+</a>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+    <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-2xl font-semibold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
+        <span class="pill pill-{{ invoice.status|lower }}">{{ invoice.status|label }}</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'ops:client_invoice_print' invoice.pk %}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">print</span>Print View
+        </a>
+        {% if invoice.status == 'ISSUED' %}
+        <a href="{% url 'ops:client_invoice_edit' invoice.pk %}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">edit</span>Edit
+        </a>
+        <form method="post" action="{% url 'ops:client_invoice_delete' invoice.pk %}" onsubmit="return confirm('Delete invoice {{ invoice.invoice_number }}? This can’t be undone.');">
+            {% csrf_token %}
+            <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-error/30 text-error text-sm font-medium hover:bg-error/10">
+                <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">delete</span>Delete
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 space-y-4">
+        <dl class="p-5 card grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div><dt class="text-ink-light">Client</dt><dd class="font-medium text-ink">{{ invoice.client.first_name }} {{ invoice.client.last_name|default:"" }}</dd></div>
+            <div><dt class="text-ink-light">Site</dt><dd class="font-medium text-ink">{{ invoice.site.name }}</dd></div>
+            <div><dt class="text-ink-light">Invoice date</dt><dd class="font-medium text-ink">{{ invoice.invoice_date|date:"j M Y" }}</dd></div>
+            <div><dt class="text-ink-light">Service period</dt><dd class="font-medium text-ink">{{ invoice.service_period_start|date:"j M" }} – {{ invoice.service_period_end|date:"j M Y" }}</dd></div>
+        </dl>
+
+        <section class="card overflow-hidden" aria-labelledby="items-heading">
+            <h2 id="items-heading" class="text-base font-semibold text-ink px-5 pt-5 pb-3">Line Items</h2>
+            <table class="w-full text-sm">
+                <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                    <tr><th class="px-5 py-2">Description</th><th class="px-5 py-2 text-right">Qty</th><th class="px-5 py-2 text-right">Unit price</th><th class="px-5 py-2 text-right">Total</th></tr>
+                </thead>
+                <tbody class="divide-y divide-surface-container">
+                    {% for item in items %}
+                    <tr><td class="px-5 py-3">{{ item.description }}</td><td class="px-5 py-3 text-right tabular-nums">{{ item.quantity.normalize }}</td><td class="px-5 py-3 text-right tabular-nums">{{ item.unit_price|money }}</td><td class="px-5 py-3 text-right tabular-nums font-medium">{{ item.total|money }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="px-5 py-3 text-ink-light">Created without line items (single amount).</td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    {% if totals.gst is not None %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 pt-3 pb-1 text-right text-ink-light">Subtotal (ex GST)</td><td class="px-5 pt-3 pb-1 text-right tabular-nums">{{ totals.subtotal|money }}</td></tr>
+                    <tr><td colspan="3" class="px-5 py-1 text-right text-ink-light">GST (10%)</td><td class="px-5 py-1 text-right tabular-nums">{{ totals.gst|money }}</td></tr>
+                    {% endif %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 py-3 text-right font-semibold">Total (AUD){% if totals.gst is not None %} incl. GST{% endif %}</td><td class="px-5 py-3 text-right font-bold tabular-nums">{{ totals.total|money }}</td></tr>
+                </tfoot>
+            </table>
+        </section>
+
+        {% if extra.notes or extra.terms or invoice.remarks %}
+        <section class="p-5 card grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div><h2 class="font-semibold text-ink mb-1">Notes</h2><p class="text-ink-light whitespace-pre-line">{{ extra.notes|default:invoice.remarks|default:"—" }}</p></div>
+            <div><h2 class="font-semibold text-ink mb-1">Payment terms</h2><p class="text-ink-light whitespace-pre-line">{{ extra.terms|default:"—" }}</p></div>
+        </section>
+        {% endif %}
+    </div>
+
+    <aside class="space-y-4">
+        <section class="p-5 card text-sm" aria-labelledby="status-heading">
+            <h2 id="status-heading" class="text-base font-semibold text-ink mb-2">Status</h2>
+            <p class="text-ink-light">Issued by {{ invoice.created_by.username }} on {{ invoice.created_at|date:"j M Y" }}.</p>
+            {% if extra.status_changed_at %}<p class="text-ink-light mt-1">{{ invoice.status|label }} since {{ extra.status_changed_at|date:"j M Y, g:i A" }} ({{ extra.status_changed_by.username|default:"—" }}).</p>{% endif %}
+            {% if next_statuses %}
+            <div class="flex flex-col gap-2 mt-4">
+                {% for s in next_statuses %}
+                <form method="post" action="{% url 'ops:client_invoice_status' invoice.pk %}"
+                      {% if s == 'CANCELLED' %}onsubmit="return confirm('Cancel invoice {{ invoice.invoice_number }}? It can’t be reopened.');"{% endif %}>
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="{{ s }}">
+                    {% if s == 'PAID' %}
+                    <button class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-success text-on-primary text-sm font-medium hover:opacity-90">
+                        <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">payments</span>Mark as Paid</button>
+                    {% elif s == 'OVERDUE' %}
+                    <button class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-error/30 text-error text-sm font-medium hover:bg-error/10">
+                        <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">running_with_errors</span>Mark as Overdue</button>
+                    {% else %}
+                    <button class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-surface-container-high text-ink-light text-sm font-medium hover:bg-surface-container">
+                        <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">block</span>Cancel Invoice</button>
+                    {% endif %}
+                </form>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-ink-light mt-3">{% if invoice.status == 'PAID' %}Paid. This invoice counts as revenue.{% else %}Cancelled. It doesn't count as revenue.{% endif %}</p>
+            {% endif %}
+        </section>
+
+        <section class="p-5 card text-sm" aria-labelledby="work-heading">
+            <h2 id="work-heading" class="text-base font-semibold text-ink mb-2">Work in This Period</h2>
+            <p class="text-ink-light">{{ work.jobs }} completed job{{ work.jobs|pluralize }} at {{ invoice.site.name }}. At {{ invoice.site.price|money }} per service that's {{ work.value|money }}.</p>
+            {% if invoice.status == 'ISSUED' and work.value != invoice.amount %}<p class="mt-2 text-ink">That differs from this invoice's {{ invoice.amount|money }}{% if invoice.gst %} (ex GST){% endif %}, so check the amount before sending it.</p>{% endif %}
+        </section>
+    </aside>
+</div>
+{% endblock %}

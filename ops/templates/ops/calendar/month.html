@@ -1,0 +1,91 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}{% if scope == 'mine' %}My Calendar{% else %}Calendar{% endif %} - SubSync{% endblock %}
+
+{% block page %}
+<div class="ui-page-header flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+    <div>
+        <h1 class="ui-title text-2xl font-semibold text-ink">{% if scope == 'mine' %}My Calendar{% else %}Calendar{% endif %}</h1>
+        <p class="ui-subtitle text-ink-light text-sm mt-1">{% if scope == 'mine' %}Jobs on the sites assigned to you.{% else %}Every scheduled job across all sites.{% endif %}</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="?month={{ prev_month|date:'Y-m' }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="ui-btn ui-btn-secondary ui-btn-icon p-2 rounded-xl border border-surface-container-high hover:bg-surface-container" aria-label="Previous month"><span class="material-symbols-outlined" aria-hidden="true">chevron_left</span></a>
+        <h2 class="min-w-[9rem] text-center text-lg font-semibold text-ink" aria-live="polite">{{ month|date:"F Y" }}</h2>
+        <a href="?month={{ next_month|date:'Y-m' }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="ui-btn ui-btn-secondary ui-btn-icon p-2 rounded-xl border border-surface-container-high hover:bg-surface-container" aria-label="Next month"><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></a>
+        <a href="?month={{ today|date:'Y-m' }}{% if filter_query %}&{{ filter_query }}{% endif %}" class="ui-btn ui-btn-secondary px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">Today</a>
+    </div>
+</div>
+
+<form method="get" class="mb-4 flex flex-wrap gap-3 items-end" aria-label="Calendar filters">
+    <input type="hidden" name="month" value="{{ month|date:'Y-m' }}">
+    {% if scope == 'all' %}
+    <label class="ui-field-label text-xs text-ink-light">Contractor
+        <select name="contractor" class="field-input mt-1">
+            <option value="">All contractors</option>
+            {% for c in contractors %}<option value="{{ c.pk }}" {% if contractor == c.pk|stringformat:'s' %}selected{% endif %}>{{ c.username }}</option>{% endfor %}
+        </select>
+    </label>
+    <label class="ui-field-label text-xs text-ink-light">Site
+        <select name="site" class="field-input mt-1">
+            <option value="">All sites</option>
+            {% for s in sites %}<option value="{{ s.pk }}" {% if site == s.pk|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        </select>
+    </label>
+    {% endif %}
+    <label class="ui-field-label text-xs text-ink-light">Status
+        <select name="status" class="field-input mt-1">
+            <option value="">All statuses</option>
+            {% for s in statuses %}<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|label }}</option>{% endfor %}
+        </select>
+    </label>
+    <button class="ui-btn ui-btn-secondary px-4 py-2.5 rounded-xl bg-ink text-surface text-sm font-medium hover:bg-primary transition-colors">Filter</button>
+</form>
+
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-4">
+    {# Month grid: tablets and up #}
+    <section class="hidden md:block card overflow-hidden xl:col-span-3" aria-label="Month grid">
+        <div class="ui-grid-head grid grid-cols-7 text-xs font-semibold uppercase tracking-wider text-ink-light border-b border-surface-container-high">
+            {% for d in weekdays %}<div class="px-2 py-2 text-center">{{ d }}</div>{% endfor %}
+        </div>
+        {% for week in weeks %}
+        <div class="grid grid-cols-7 {% if not forloop.last %}border-b border-surface-container-high{% endif %}">
+            {% for cell in week %}
+            <a href="?month={{ month|date:'Y-m' }}&day={{ cell.date|date:'Y-m-d' }}{% if filter_query %}&{{ filter_query }}{% endif %}"
+               class="block min-h-[7.5rem] p-1.5 {% if not forloop.last %}border-r border-surface-container-high{% endif %} hover:bg-surface/70 {% if not cell.in_month %}bg-surface/50{% endif %} {% if cell.date == selected %}ring-2 ring-inset ring-primary/40{% endif %}"
+               aria-label="{{ cell.date|date:'l j F' }}, {{ cell.count }} job{{ cell.count|pluralize }}">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold tabular-nums {% if cell.is_today %}ring-2 ring-primary text-primary{% elif cell.in_month %}text-ink{% else %}text-outline{% endif %}">{{ cell.date.day }}</span>
+                <div class="mt-1 space-y-1">
+                    {% for job in cell.jobs %}
+                    <div class="pill pill-{{ job.display_status|lower }} chip w-full !rounded-md !px-1.5 text-[11px]" title="{{ job.scheduled_time|time:'g:i A' }} · {{ job.site.name }} · {{ job.display_status|label }}">
+                        <span class="truncate"><span class="tabular-nums">{{ job.scheduled_time|time:"G:i" }}</span> {{ job.site.name }}</span>
+                    </div>
+                    {% endfor %}
+                    {% if cell.more %}<p class="text-[11px] font-medium text-ink-light px-1">+{{ cell.more }} more</p>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </section>
+
+    {# Day agenda (all sizes) #}
+    <section class="card p-5 hidden md:block" aria-labelledby="agenda-heading">
+        <h2 id="agenda-heading" class="ui-section-title text-base font-semibold text-ink">{{ selected|date:"l j F" }}</h2>
+        <p class="text-xs text-ink-light mb-3">{{ agenda|length }} job{{ agenda|length|pluralize }}</p>
+        {% include 'ops/calendar/agenda_list.html' with jobs=agenda %}
+    </section>
+
+    {# Mobile fallback: the whole month as an agenda list #}
+    <section class="md:hidden space-y-3" aria-label="Month agenda">
+        {% for day, jobs in month_days %}
+        <div class="card p-4">
+            <h3 class="text-sm font-semibold {% if day == today %}text-primary{% else %}text-ink{% endif %} mb-2">{{ day|date:"D j M" }}{% if day == today %} · Today{% endif %}</h3>
+            {% include 'ops/calendar/agenda_list.html' %}
+        </div>
+        {% empty %}
+        <div class="card ui-empty p-6 text-center text-sm text-ink-light">No jobs this month.</div>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

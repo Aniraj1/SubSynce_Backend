@@ -1,0 +1,108 @@
+{% extends 'ops/layouts/app.html' %}
+{% load static ops_extras %}
+
+{% block title %}{% if invoice %}Edit {{ invoice.invoice_number }}{% else %}New Client Invoice{% endif %} - SubSync{% endblock %}
+
+{% block page %}
+<a href="{% if invoice %}{% url 'ops:client_invoice_detail' invoice.pk %}{% else %}{% url 'ops:client_invoices' %}{% endif %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4">
+    <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>{% if invoice %}Back to Invoice{% else %}Client Invoices{% endif %}
+</a>
+<h1 class="text-2xl font-semibold text-ink mb-1">{% if invoice %}Edit {{ invoice.invoice_number }}{% else %}New Client Invoice{% endif %}</h1>
+<p class="text-ink-light text-sm mb-5">Bill a client for work at one of their sites. The client is taken from the site.</p>
+
+{% if not has_sites %}
+<div class="p-5 rounded-2xl bg-warning/10 border border-warning/30 text-sm text-ink" role="alert">
+    There are no sites yet, so there's nothing to invoice. <a href="{% url 'ops:clients' %}" class="font-medium text-primary hover:underline">Add a client and site</a> first.
+</div>
+{% else %}
+<form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="invoice-form" data-busy-form novalidate>
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <div class="lg:col-span-2 space-y-4">
+        {% if header.non_field_errors or formset.non_form_errors %}
+        <div class="px-4 py-3 rounded-xl bg-error/10 text-error text-sm" role="alert">{{ header.non_field_errors|join:" " }} {{ formset.non_form_errors|join:" " }}</div>
+        {% endif %}
+
+        <section class="p-5 card" aria-labelledby="details-heading">
+            <h2 id="details-heading" class="text-base font-semibold text-ink mb-4">Details</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for field in header %}{% if field.name != 'notes' and field.name != 'terms' and field.name != 'gst' %}
+                <div {% if field.name == 'site' %}class="sm:col-span-2"{% endif %}>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-ink mb-1">{{ field.label }}</label>
+                    {% if field.name == 'site' %}
+                    <select name="site" id="{{ field.id_for_label }}" class="field-input" required data-site-picker
+                            {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}-error"{% endif %}>
+                        <option value="">Choose a site…</option>
+                        {% for site in sites %}
+                        <option value="{{ site.pk }}" {% if field.value|stringformat:'s' == site.pk|stringformat:'s' %}selected{% endif %}
+                                data-client="{{ site.client_id.first_name }} {{ site.client_id.last_name|default:'' }}"
+                                data-email="{{ site.client_id.email }}" data-phone="{{ site.client_id.phone|default:'' }}"
+                                data-address="{{ site.address }}" data-price="{{ site.price }}">{{ site.name }} · {{ site.client_id.first_name }} {{ site.client_id.last_name|default:'' }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <input name="{{ field.name }}" id="{{ field.id_for_label }}" class="field-input {% if field.name == 'invoice_number' %}tabular-nums{% endif %}"
+                           type="{% if 'date' in field.name or 'period' in field.name %}date{% else %}text{% endif %}"
+                           value="{% if 'date' in field.name or 'period' in field.name %}{{ field.value|date:'Y-m-d'|default:field.value|default:'' }}{% else %}{{ field.value|default:'' }}{% endif %}" required
+                           {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}-error"{% endif %}>
+                    {% endif %}
+                    {% if field.errors %}<p id="{{ field.id_for_label }}-error" class="text-xs text-error mt-1">{{ field.errors|join:" " }}</p>{% endif %}
+                </div>
+                {% endif %}{% endfor %}
+            </div>
+        </section>
+
+        {% include 'ops/partials/line_items.html' %}
+
+        <section class="p-5 card grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Notes and terms">
+            <div>
+                <label for="id_notes" class="block text-sm font-medium text-ink mb-1">Notes</label>
+                <textarea id="id_notes" name="notes" rows="4" maxlength="2000" class="field-input" placeholder="Printed on the invoice for the client…">{{ header.notes.value|default:'' }}</textarea>
+            </div>
+            <div>
+                <label for="id_terms" class="block text-sm font-medium text-ink mb-1">Payment terms</label>
+                <textarea id="id_terms" name="terms" rows="4" maxlength="2000" class="field-input">{{ header.terms.value|default:'' }}</textarea>
+            </div>
+        </section>
+    </div>
+
+    <aside class="space-y-4">
+        <section class="p-5 card lg:sticky lg:top-4" aria-labelledby="summary-heading">
+            {% if company.logo %}
+            <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" class="h-9 max-w-[12rem] object-contain mb-4">
+            {% else %}
+            <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync" class="h-9 mb-4 dark:hidden">
+            <img src="{% static 'images/subsync-logo-dark.svg' %}" alt="SubSync" class="h-9 mb-4 hidden dark:block">
+            {% endif %}
+            <div class="mb-4 text-sm" aria-live="polite">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-ink-light mb-1">Bill to</p>
+                <p id="bill-to-name" class="font-semibold text-ink">Choose a site</p>
+                <p id="bill-to-contact" class="text-ink-light"></p>
+                <p id="bill-to-address" class="text-ink-light"></p>
+            </div>
+            <h2 id="summary-heading" class="text-base font-semibold text-ink mb-3">Summary</h2>
+            <dl class="space-y-2 text-sm">
+                <div class="flex justify-between"><dt class="text-ink-light">Lines</dt><dd id="line-count" class="tabular-nums">0</dd></div>
+                <div class="flex justify-between"><dt class="text-ink-light">Services billed</dt><dd id="qty-total" class="tabular-nums">0</dd></div>
+                <div class="flex justify-between pt-2 border-t border-surface-container {% if not header.gst.value %}hidden{% endif %}" data-gst-row><dt class="text-ink-light">Subtotal (ex GST)</dt><dd id="subtotal" class="tabular-nums">$0.00</dd></div>
+                <div class="flex justify-between {% if not header.gst.value %}hidden{% endif %}" data-gst-row><dt class="text-ink-light">GST (10%)</dt><dd id="gst-total" class="tabular-nums">$0.00</dd></div>
+                <div class="flex justify-between pt-2 border-t border-surface-container text-base"><dt class="font-semibold text-ink">Total (AUD)</dt><dd id="grand-total" class="font-bold tabular-nums text-ink" aria-live="polite">$0.00</dd></div>
+            </dl>
+            <label for="id_gst" class="mt-4 flex items-center gap-2 p-3 rounded-xl border border-surface-container-high text-sm font-medium text-ink cursor-pointer hover:bg-surface-container">
+                <input type="checkbox" name="gst" id="id_gst" value="on" class="w-4 h-4 accent-[#F27E22]" {% if header.gst.value %}checked{% endif %}>
+                Include GST (10%)
+            </label>
+            <p class="text-xs text-ink-light mt-3">The invoice is saved as Issued. Mark it paid once the client pays; only paid invoices count as revenue.</p>
+            <button class="mt-4 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-on-primary font-medium hover:bg-primary-hover transition-colors">
+                <span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">send</span>{% if invoice %}Save Changes{% else %}Issue Invoice{% endif %}
+            </button>
+        </section>
+    </aside>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/invoice_builder.js' %}"></script>
+{% endblock %}

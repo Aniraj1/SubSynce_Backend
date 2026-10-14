@@ -1,0 +1,96 @@
+{# Edit Client modal, posts to ops:client_update. Needs `client_form` (site/status options); pass `next` to return somewhere other than the Clients list. #}
+{% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
+<div id="client-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeClientModal();">
+    <div class="bg-white rounded-2xl w-full max-w-[640px] max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-ink">Edit Client</h2>
+            <button type="button" onclick="closeClientModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        <form id="client-form" method="post">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="{{ label }}" for="field-first-name">First Name *</label>
+                    <input type="text" name="first_name" id="field-first-name" required class="{{ field }}">
+                </div>
+                <div>
+                    <label class="{{ label }}" for="field-last-name">Last Name</label>
+                    <input type="text" name="last_name" id="field-last-name" class="{{ field }}">
+                </div>
+                <div>
+                    <label class="{{ label }}" for="field-phone">Phone</label>
+                    <input type="text" name="phone" id="field-phone" class="{{ field }}">
+                </div>
+                <div>
+                    <label class="{{ label }}" for="field-email">Email</label>
+                    <input type="email" name="email" id="field-email" class="{{ field }}">
+                </div>
+                <div class="sm:col-span-2">
+                    <span class="{{ label }}">Assigned Sites</span>
+                    <div id="client-sites" class="max-h-36 overflow-y-auto rounded-xl border border-surface-container-high bg-surface py-1">
+                        {% for site in client_form.fields.assigned_sites.queryset %}
+                        <label class="flex items-start gap-2 px-3.5 py-1.5 text-sm text-ink cursor-pointer hover:bg-white">
+                            <input type="checkbox" name="assigned_sites" value="{{ site.id }}" class="mt-0.5 accent-[#F27E22]">
+                            <span class="min-w-0">{{ site.name }} <span class="text-xs text-ink-light">· {{ site.address }}</span></span>
+                        </label>
+                        {% empty %}
+                        <p class="px-3.5 py-1.5 text-xs text-ink-light">No sites available yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div>
+                    <label class="{{ label }}" for="field-status">Status</label>
+                    <select name="status" id="field-status" class="{{ field }}">
+                        {% for value, text in client_form.fields.status.choices %}{% if value %}<option value="{{ value }}">{{ text }}</option>{% endif %}{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Role isn't editable here; resubmit the client's existing value so it isn't wiped. -->
+            <input type="hidden" name="role" id="field-role">
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeClientModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">
+                    Save Client
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endwith %}
+
+<script>
+    // `data` is a button's dataset, filled by partials/_client_data_attrs.html.
+    function openClientModal(data) {
+        const form = document.getElementById('client-form');
+        form.reset();
+        form.action = '/clients/' + data.id + '/edit/';
+        document.getElementById('field-first-name').value = data.firstName || '';
+        document.getElementById('field-last-name').value = data.lastName || '';
+        document.getElementById('field-phone').value = data.phone || '';
+        document.getElementById('field-email').value = data.email || '';
+        document.getElementById('field-role').value = data.role || '';
+        document.getElementById('field-status').value = data.status;
+        const assigned = (data.sites || '').split(',');
+        document.querySelectorAll('#client-sites input').forEach(function (cb) { cb.checked = assigned.includes(cb.value); });
+        const modal = document.getElementById('client-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeClientModal() {
+        const modal = document.getElementById('client-modal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeClientModal();
+    });
+</script>

@@ -1,0 +1,136 @@
+{# Add/Edit Site modal (posts to ops:site_create / ops:site_update) and openSiteModal(). #}
+{# Needs `clients`, `frequencies` and `contractors` in context; `next` returns to the current page. #}
+<!-- Add / Edit Site modal -->
+<div id="site-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeSiteModal();">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 id="site-modal-title" class="text-lg font-semibold text-ink">Add Site</h2>
+            <button type="button" onclick="closeSiteModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        {% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
+        <form id="site-form" method="post" action="{% url 'ops:site_create' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div class="space-y-4">
+                <div>
+                    <label class="{{ label }}" for="site-client">Client *</label>
+                    <select name="client_id" id="site-client" required class="{{ field }}">
+                        <option value="">Select a client</option>
+                        {% for c in clients %}<option value="{{ c.id }}">{{ c.first_name }} {{ c.last_name|default:'' }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ label }}" for="site-name">Site Name *</label>
+                    <input type="text" name="name" id="site-name" required maxlength="255" class="{{ field }}">
+                </div>
+                <div>
+                    <label class="{{ label }}" for="site-address">Address *</label>
+                    <input type="text" name="address" id="site-address" required maxlength="255" class="{{ field }}">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="{{ label }}" for="site-frequency">Cleaning Frequency *</label>
+                        <input type="text" name="cleaning_frequency" id="site-frequency" required maxlength="255" list="frequency-options" class="{{ field }}">
+                        <datalist id="frequency-options">{% for f in frequencies %}<option value="{{ f }}">{% endfor %}</datalist>
+                    </div>
+                    <div>
+                        <label class="{{ label }}" for="site-price">Price ($) *</label>
+                        <input type="number" name="price" id="site-price" required min="0" step="0.01" class="{{ field }}">
+                    </div>
+                </div>
+                <div>
+                    <label class="{{ label }}" for="site-contractor">Assigned Contractor</label>
+                    <select name="assigned_contractor" id="site-contractor" class="{{ field }}">
+                        <option value="">Unassigned</option>
+                        {% for u in contractors %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ label }}" for="site-instructions">Cleaning Instructions</label>
+                    <textarea name="cleaning_instructions" id="site-instructions" rows="3" class="{{ field }}"></textarea>
+                </div>
+                <div>
+                    <label class="{{ label }}" for="site-images">Site Images</label>
+                    <!-- Existing images (Edit only); tick to remove -->
+                    <div id="site-current-images" class="hidden flex-wrap gap-2 mb-2"></div>
+                    <input type="file" name="images" id="site-images" multiple accept="image/*"
+                           class="block w-full text-xs text-ink-light file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border file:border-surface-container-high file:bg-card file:text-xs file:text-ink">
+                    <p class="mt-1 text-[11px] text-ink-light">Images up to 5MB each. New images are added to the site's gallery; the first one is shown in the list.</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeSiteModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">Save Site</button>
+            </div>
+        </form>
+        {% endwith %}
+    </div>
+</div>
+
+<script>
+    // Opens the modal empty for Add, or pre-filled from an edit button's data-* attributes.
+    function openSiteModal(data) {
+        data = data || {};
+        const form = document.getElementById('site-form');
+        form.action = data.action || '{% url "ops:site_create" %}';
+        document.getElementById('site-modal-title').textContent = data.action ? 'Edit Site' : 'Add Site';
+        document.getElementById('site-client').value = data.client || '';
+        document.getElementById('site-name').value = data.name || '';
+        document.getElementById('site-address').value = data.address || '';
+        document.getElementById('site-frequency').value = data.frequency || '';
+        document.getElementById('site-price').value = data.price || '';
+        document.getElementById('site-contractor').value = data.contractor || '';
+        document.getElementById('site-instructions').value = data.instructions || '';
+        document.getElementById('site-images').value = '';
+        renderSiteImages(data.images);
+        const modal = document.getElementById('site-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    // Existing gallery images ("id|url,id|url") as thumbnails with a "remove" checkbox each.
+    function renderSiteImages(value) {
+        const box = document.getElementById('site-current-images');
+        box.innerHTML = '';
+        (value || '').split(',').filter(Boolean).forEach(function (pair) {
+            const parts = pair.split('|');
+            const label = document.createElement('label');
+            label.className = 'relative cursor-pointer';
+            label.title = 'Tick to remove this image';
+            const img = document.createElement('img');
+            img.src = parts[1];
+            img.alt = '';
+            img.className = 'w-16 h-16 rounded-xl object-cover border border-surface-container-high bg-surface-container';
+            img.onerror = function () {  // missing file: same placeholder as the list thumbnails
+                const ph = document.createElement('span');
+                ph.className = 'w-16 h-16 rounded-xl bg-surface-container border border-surface-container-high text-ink-light flex items-center justify-center';
+                ph.innerHTML = '<span class="material-symbols-outlined" style="font-size: 22px;" aria-hidden="true">image</span>';
+                img.replaceWith(ph);
+            };
+            const box2 = document.createElement('input');
+            box2.type = 'checkbox';
+            box2.name = 'remove_images';
+            box2.value = parts[0];
+            box2.className = 'absolute top-1 right-1 w-4 h-4';
+            box2.setAttribute('aria-label', 'Remove image');
+            label.append(img, box2);
+            box.appendChild(label);
+        });
+        box.classList.toggle('hidden', !box.children.length);
+        box.classList.toggle('flex', !!box.children.length);
+    }
+
+    function closeSiteModal() {
+        const modal = document.getElementById('site-modal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeSiteModal();
+    });
+</script>

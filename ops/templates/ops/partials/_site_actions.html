@@ -1,0 +1,24 @@
+{% comment %}Edit/Delete buttons for one `site` row; pair with _site_form_modal.html. Both return to the current page,
+except Delete, which goes to `delete_next` when given (e.g. the list, from the site's own page).{% endcomment %}
+<div class="flex items-center justify-center gap-3">
+    <button type="button" title="Edit site" onclick="openSiteModal(this.dataset)"
+            data-action="{% url 'ops:site_update' site.id %}"
+            data-client="{{ site.client_id_id }}" data-name="{{ site.name }}"
+            data-address="{{ site.address }}" data-frequency="{{ site.cleaning_frequency }}"
+            data-price="{{ site.price|stringformat:'s' }}"
+            data-contractor="{{ site.assigned_contractor_id|default:'' }}"
+            data-instructions="{{ site.cleaning_instructions|default:'' }}"
+            data-images="{% for img in site.images.all %}{{ img.id }}|{{ img.image.url }}{% if not forloop.last %},{% endif %}{% endfor %}"
+            class="w-8 h-8 flex items-center justify-center rounded-md border border-[#E2E2E2] text-[#3B5BDB] hover:bg-[#F3F3F3] transition-colors">
+        <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+    </button>
+    <form method="post" action="{% url 'ops:site_delete' site.id %}"
+          onsubmit="return confirm('Remove {{ site.name|escapejs }}? This cannot be undone.');">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ delete_next|default:request.get_full_path }}">
+        <button type="submit" title="Delete site"
+                class="w-8 h-8 flex items-center justify-center rounded-md border border-[#E2E2E2] text-[#EF4444] hover:bg-[#EF4444]/5 transition-colors">
+            <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+        </button>
+    </form>
+</div>

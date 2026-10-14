@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load ops_extras %}
+
+{% block title %}{{ s.site.name }} · {{ s.scheduled_date|date:"j M Y" }} - SubSync{% endblock %}
+
+{% block content %}
+{% with card='bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6' muted='text-[#494949]/60' %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='schedules' %}
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <main class="flex-1 overflow-y-auto bg-surface">
+            <div class="w-full max-w-[1184px] px-4 sm:px-8 lg:px-14 py-8">
+                <!-- Breadcrumb + title -->
+                <nav class="flex flex-wrap items-center gap-1.5 text-xs text-[#888]">
+                    <a href="{% url 'ops:schedules' %}" class="hover:text-primary">Schedules</a>
+                    <span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+                    <span>{{ s.site.name }} · {{ s.scheduled_date|date:"j M Y" }}</span>
+                </nav>
+                <div class="mt-3 mb-8 flex flex-wrap items-center gap-3">
+                    <h1 class="text-2xl font-semibold text-[#222222] break-words">{{ s.site.name }}</h1>
+                    <span class="inline-block px-3 py-1 rounded-md text-[11px]
+                        {% if s.status == 'SCHEDULED' %}bg-[#FDEEE4] text-[#F27E22]{% elif s.status == 'COMPLETED' %}bg-[#E3F8EC] text-[#34C27A]{% else %}bg-[#F3F3F3] text-[#494949]{% endif %}">
+                        {{ s.get_status_display|lower|capfirst }}
+                    </span>
+                </div>
+
+                <!-- Service details -->
+                <section class="{{ card }}" aria-labelledby="details-heading">
+                    <h2 id="details-heading" class="text-base font-semibold text-[#222222] mb-5">Service Details</h2>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-sm">
+                        <div><dt class="text-[#888]">Date</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.scheduled_date|date:"l j M Y" }}</dd></div>
+                        <div><dt class="text-[#888]">Time</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.scheduled_time|time:"g:i A" }}</dd></div>
+                        <div><dt class="text-[#888]">Frequency</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.site.cleaning_frequency|lower|capfirst }}</dd></div>
+                        <div><dt class="text-[#888]">Site</dt><dd class="mt-1 font-medium"><a href="{% url 'ops:site_detail' s.site_id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ s.site.name }}</a></dd></div>
+                        <div><dt class="text-[#888]">Address</dt><dd class="mt-1 font-medium text-[#222222] break-words">{{ s.site.address }}</dd></div>
+                        <div><dt class="text-[#888]">Client</dt><dd class="mt-1 font-medium"><a href="{% url 'ops:client_detail' s.site.client_id_id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ s.site.client_id.first_name }} {{ s.site.client_id.last_name|default:'' }}</a></dd></div>
+                        <div><dt class="text-[#888]">Contractor</dt><dd class="mt-1 font-medium">{% if contractor %}<a href="{% url 'ops:subcontractor_detail' contractor.id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ contractor_name }}</a>{% else %}<span class="font-normal {{ muted }}">Not assigned</span>{% endif %}</dd></div>
+                        <div><dt class="text-[#888]">Price per service</dt><dd class="mt-1 font-medium text-[#222222] tabular-nums">{{ s.site.price|money }}</dd></div>
+                        <div><dt class="text-[#888]">Created</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.created_at|date:"j M Y" }} by {{ s.created_by.username }}</dd></div>
+                        <div class="sm:col-span-2 lg:col-span-3"><dt class="text-[#888]">Notes</dt><dd class="mt-1 text-[#222222] whitespace-pre-line break-words">{{ s.notes|default:"No notes." }}</dd></div>
+                        <div class="sm:col-span-2 lg:col-span-3"><dt class="text-[#888]">Cleaning instructions</dt><dd class="mt-1 text-[#222222] whitespace-pre-line break-words">{{ s.site.cleaning_instructions|default:"No instructions added." }}</dd></div>
+                    </dl>
+                </section>
+
+                <!-- Work record -->
+                <section class="mt-6 {{ card }}" aria-labelledby="work-heading">
+                    <div class="flex items-center justify-between gap-3 mb-5">
+                        <h2 id="work-heading" class="text-base font-semibold text-[#222222]">Work Record</h2>
+                        {% if work %}<a href="{% url 'ops:completion_detail' work.id %}" class="text-sm font-medium text-[#F27E22] hover:underline">Open full record</a>{% endif %}
+                    </div>
+                    {% if work %}
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-5 text-sm">
+                        <div><dt class="text-[#888]">Status</dt><dd class="mt-1"><span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span></dd></div>
+                        <div><dt class="text-[#888]">Check-in</dt><dd class="mt-1 font-medium text-[#222222]">{{ work.check_in_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+                        <div><dt class="text-[#888]">Check-out</dt><dd class="mt-1 font-medium text-[#222222]">{{ work.check_out_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+                        <div><dt class="text-[#888]">Time on site</dt><dd class="mt-1 font-medium text-[#222222]">{% if duration %}{{ duration }}{% else %}—{% endif %}</dd></div>
+                        <div class="sm:col-span-2 lg:col-span-4"><dt class="text-[#888]">Completion notes</dt><dd class="mt-1 text-[#222222] whitespace-pre-line break-words">{{ work.completion_notes|default:"No notes." }}</dd></div>
+                    </dl>
+                    {% with photos=work.work_completion_images.all %}
+                    {% if photos %}
+                    <div class="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {% for p in photos %}
+                        <a href="{{ p.evidence_photo.url }}" target="_blank" rel="noopener" title="Open full size"
+                           class="block aspect-[4/3] rounded-xl overflow-hidden border border-surface-container-high bg-surface-container hover:opacity-90 transition-opacity">
+                            <img src="{{ p.evidence_photo.url }}" alt="Work photo {{ forloop.counter }}" loading="lazy" class="w-full h-full object-cover">
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% else %}
+                    <p class="text-sm {{ muted }}">No work recorded for this service yet.</p>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}

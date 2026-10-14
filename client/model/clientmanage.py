@@ -9,6 +9,16 @@ class Client(BaseModel):
     """
     Client model where all information about the client is stored
     """
+
+    ROLE_CHOICES = (
+        ("ADMINISTRATOR", "Administrator"),
+        ("SUBCONTRACTOR", "Subcontractor"),
+    )
+    STATUS_CHOICES = (
+        ("ACTIVE", "Active"),
+        ("INACTIVE", "Inactive"),
+    )
+
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, db_column="ID"
     )
@@ -20,10 +30,22 @@ class Client(BaseModel):
         max_length=255, blank=True, null=True, unique=True, db_column="PHONE"
     )
     email = models.EmailField(blank=True, db_column="EMAIL")
+    photo = models.ImageField(
+        upload_to="client_photos/", blank=True, null=True, db_column="PHOTO"
+    )
+    role = models.CharField(
+        max_length=255, choices=ROLE_CHOICES, db_column="ROLE"
+    )
+    status = models.CharField(
+        max_length=255, choices=STATUS_CHOICES, default="ACTIVE", db_column="STATUS"
+    )
+    assigned_sites = models.ManyToManyField(
+        "Site", blank=True, related_name="assigned_clients"
+    )
 
     class Meta:
         db_table = "POC_CLIENT"
-        
+
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} || {self.id}".strip()

@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contractors - SubSync{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='subcontractors' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="w-full px-4 lg:px-6 py-6">
+                <!-- Page Header -->
+                <div class="mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-ink">Contractors</h1>
+                        <p class="text-ink-light text-sm mt-1">View all contractor accounts and their assigned sites.</p>
+                    </div>
+                    <button type="button" onclick="openAddModal()"
+                            class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">add</span>Add Contractor
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <form method="get" class="mb-4">
+                    <div class="relative w-full sm:max-w-sm">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-light">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">search</span>
+                        </div>
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ query }}"
+                            placeholder="Search by name, username, email or phone..."
+                            class="w-full h-10 pl-9 pr-4 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+                        >
+                    </div>
+                </form>
+
+                <!-- Contractors Table -->
+                <div class="card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[720px] text-sm">
+                            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                                <tr>
+                                    <th class="px-5 py-3">Contractor</th>
+                                    <th class="px-5 py-3">Email / Username</th>
+                                    <th class="px-5 py-3">Phone</th>
+                                    <th class="px-5 py-3">Assigned Sites</th>
+                                    <th class="px-5 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-surface-container">
+                                {% for contractor in page_obj %}
+                                {% with detail=contractor.user_detail %}
+                                <tr class="hover:bg-surface/60">
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0
+                                                {% cycle 'bg-primary/10 text-primary' 'bg-success/10 text-success' 'bg-warning/10 text-warning' 'bg-error/10 text-error' as avatar_color %}">
+                                                {% if detail and detail.first_name %}{{ detail.first_name|first|upper }}{{ detail.last_name|default:''|first|upper }}{% else %}{{ contractor.username|first|upper }}{% endif %}
+                                            </div>
+                                            <a href="{% url 'ops:subcontractor_detail' contractor.id %}" class="font-medium text-ink hover:text-primary hover:underline">
+                                                {% if detail and detail.first_name %}{{ detail.first_name }} {{ detail.last_name|default:'' }}{% else %}@{{ contractor.username }}{% endif %}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        <div class="text-ink">{{ contractor.email|default:"—" }}</div>
+                                        <div class="text-xs text-ink-light">@{{ contractor.username }}</div>
+                                    </td>
+                                    <td class="px-5 py-3 text-ink-light">{{ detail.phone|default:"—" }}</td>
+                                    <td class="px-5 py-3 text-ink-light">{{ contractor.site_count }}</td>
+                                    <td class="px-5 py-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" title="Edit" onclick="openEditModal(this.dataset)"
+                                                    data-action="{% url 'ops:subcontractor_update' contractor.id %}"
+                                                    data-first_name="{{ detail.first_name|default:'' }}" data-last_name="{{ detail.last_name|default:'' }}"
+                                                    data-username="{{ contractor.username }}" data-email="{{ contractor.email|default:'' }}" data-phone="{{ detail.phone|default:'' }}"
+                                                    class="p-2 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
+                                                <span class="material-symbols-outlined text-primary" style="font-size: 18px;">edit</span>
+                                            </button>
+                                            <form method="post" action="{% url 'ops:user_delete' contractor.id %}"
+                                                  onsubmit="return confirm('Delete {{ contractor.username|escapejs }}? They will no longer be able to log in. This cannot be undone.');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                <button type="submit" title="Delete"
+                                                        class="p-2 rounded-lg border border-surface-container-high hover:bg-error/5 transition-colors">
+                                                    <span class="material-symbols-outlined text-error" style="font-size: 18px;">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="px-5 py-12 text-center text-ink-light">
+                                        {% if query %}No contractors match "{{ query }}".{% else %}No contractor accounts yet.{% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-surface-container">
+                        <p class="text-sm text-ink-light">
+                            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_contractors }} contractors
+                        </p>
+                        <div class="flex items-center gap-1.5">
+                            {% if page_obj.has_previous %}
+                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-container-high hover:bg-surface-container text-ink-light">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                            </a>
+                            {% endif %}
+                            {% for num in page_obj.paginator.page_range %}
+                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ num }}"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg text-sm {% if num == page_obj.number %}bg-primary text-on-primary{% else %}border border-surface-container-high hover:bg-surface-container text-ink-light{% endif %}">
+                                {{ num }}
+                            </a>
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg border border-surface-container-high hover:bg-surface-container text-ink-light">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% elif total_contractors %}
+                    <div class="px-6 py-4 border-t border-surface-container">
+                        <p class="text-sm text-ink-light">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_contractors }} contractors</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add Contractor Modal: posts to user_create with the role fixed to Contractor -->
+<div id="add-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeAddModal();">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-ink">Add Contractor</h2>
+            <button type="button" onclick="closeAddModal()" class="p-1.5 rounded-lg hover:bg-surface-container" aria-label="Close">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        <form id="add-form" method="post" action="{% url 'ops:user_create' %}">
+            {% csrf_token %}
+            <input type="hidden" name="role" value="CONTRACTOR">
+            <input type="hidden" name="next" value="{% url 'ops:subcontractors' %}">
+            {% for e in add_state.errors.non_field %}<p class="form-error mb-3 text-xs text-error">{{ e }}</p>{% endfor %}
+            {% for e in add_state.errors.role %}<p class="form-error mb-3 text-xs text-error">{{ e }}</p>{% endfor %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-first_name">First Name *</label>
+                    <input type="text" name="first_name" id="add-first_name" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in add_state.errors.first_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-last_name">Last Name</label>
+                    <input type="text" name="last_name" id="add-last_name" class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in add_state.errors.last_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-username">Username *</label>
+                    <input type="text" name="username" id="add-username" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in add_state.errors.username %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-email">Email *</label>
+                    <input type="email" name="email" id="add-email" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in add_state.errors.email %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-password1">Password *</label>
+                    <input type="password" name="password1" id="add-password1" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password">
+                    {% for e in add_state.errors.password1 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1" for="add-password2">Confirm Password *</label>
+                    <input type="password" name="password2" id="add-password2" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password">
+                    {% for e in add_state.errors.password2 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+            <p class="mt-2 text-[11px] text-ink-light">At least 8 characters with an uppercase letter, a lowercase letter, a number and a special character. The contractor can change it later with Forgot Password.</p>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeAddModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">Add Contractor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Contractor Modal (role stays Contractor; passwords change via Forgot Password) -->
+<div id="edit-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeEditModal();">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-ink">Edit Contractor</h2>
+            <button type="button" onclick="closeEditModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        <form id="edit-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="role" value="CONTRACTOR">
+            {% for e in edit_state.errors.non_field %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-first_name">First Name *</label>
+                    <input type="text" name="first_name" id="edit-first_name" required maxlength="255"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.first_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-last_name">Last Name</label>
+                    <input type="text" name="last_name" id="edit-last_name" maxlength="255"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.last_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-username">Username *</label>
+                    <input type="text" name="username" id="edit-username" required maxlength="255" autocomplete="off"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.username %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-email">Email *</label>
+                    <input type="email" name="email" id="edit-email" required
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.email %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-phone">Phone</label>
+                    <input type="text" name="phone" id="edit-phone" maxlength="255" inputmode="tel"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.phone %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeEditModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ edit_state.modal|json_script:"edit-modal-reopen" }}
+{{ add_state.modal|json_script:"add-modal-reopen" }}
+<script>
+    function showModal(el) {
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+    }
+
+    function hideModal(el) {
+        el.classList.remove('flex');
+        el.classList.add('hidden');
+    }
+
+    // `data` comes from an Edit button's data-* attributes (or the reopen state after a failed save).
+    function openEditModal(data, keepErrors) {
+        if (!keepErrors) document.querySelectorAll('#edit-form .form-error').forEach(function (el) { el.remove(); });
+        document.getElementById('edit-form').action = data.action;
+        ['first_name', 'last_name', 'username', 'email', 'phone'].forEach(function (name) {
+            document.getElementById('edit-' + name).value = data[name] || '';
+        });
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+        hideModal(document.getElementById('edit-modal'));
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeEditModal();
+        }
+    });
+
+    const reopenEdit = JSON.parse(document.getElementById('edit-modal-reopen').textContent);
+    if (reopenEdit) openEditModal(reopenEdit, true);
+
+    function openAddModal(keepErrors) {
+        if (!keepErrors) {
+            document.querySelectorAll('#add-form .form-error').forEach(function (el) { el.remove(); });
+            document.getElementById('add-form').reset();
+        }
+        showModal(document.getElementById('add-modal'));
+        document.getElementById('add-first_name').focus();
+    }
+
+    function closeAddModal() {
+        hideModal(document.getElementById('add-modal'));
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeAddModal();
+    });
+
+    // After a failed add, reopen the form with what was typed (never passwords) and the errors.
+    const reopenAdd = JSON.parse(document.getElementById('add-modal-reopen').textContent);
+    if (reopenAdd) {
+        [['first_name', 'firstName'], ['last_name', 'lastName'], ['username', 'username'], ['email', 'email']].forEach(function (pair) {
+            document.getElementById('add-' + pair[0]).value = reopenAdd[pair[1]] || '';
+        });
+        openAddModal(true);
+    }
+</script>
+{% endblock %}

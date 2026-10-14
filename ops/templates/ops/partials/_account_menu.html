@@ -1,0 +1,49 @@
+{# Top-right account menu (trigger + dropdown card), shared by every top bar. Opened/closed by the script in base.html. #}
+{# Optional: `display_name` / `role_label` override the defaults (the contractor portal passes them). #}
+{% with item='ui-menu-item flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm transition-colors' %}
+<div class="relative min-w-0" data-account-menu>
+    <button type="button" data-account-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"
+            class="ui-account-trigger flex items-center gap-2 min-w-0 pl-1 pr-1 py-1 rounded-xl hover:bg-surface-container transition-colors">
+        <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-primary" style="font-size: 18px;" aria-hidden="true">person</span>
+        </span>
+        <span class="hidden md:flex flex-col items-start leading-tight min-w-0">
+            <span class="text-sm font-semibold text-ink truncate max-w-[180px]">{% if display_name %}{{ display_name }}{% elif user.user_detail.first_name %}{{ user.user_detail.first_name }} {{ user.user_detail.last_name|default:'' }}{% else %}{{ user.username }}{% endif %}</span>
+            <span class="text-xs text-ink-light">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Contractor{% else %}{{ user.role|title }}{% endif %}</span>
+        </span>
+        <span class="material-symbols-outlined text-ink-light hidden md:block" style="font-size: 18px;" aria-hidden="true">expand_more</span>
+    </button>
+
+    <div data-account-panel role="menu" aria-label="Account"
+         class="ui-menu hidden absolute right-0 top-full mt-2 z-40 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-card border border-surface-container-high shadow-lg p-2">
+        <!-- Who is signed in -->
+        <div class="flex items-center gap-3 px-3 py-3">
+            <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-primary" style="font-size: 20px;" aria-hidden="true">person</span>
+            </span>
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-ink truncate">{% if display_name %}{{ display_name }}{% elif user.user_detail.first_name %}{{ user.user_detail.first_name }} {{ user.user_detail.last_name|default:'' }}{% else %}{{ user.username }}{% endif %}</p>
+                {% if user.email %}<p class="text-xs text-ink-light truncate">{{ user.email }}</p>{% endif %}
+                <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-medium {% if user.role == 'CONTRACTOR' %}bg-scheduled/10 text-scheduled{% else %}bg-primary/10 text-primary{% endif %}">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Contractor{% else %}{{ user.role|title }}{% endif %}</span>
+            </div>
+        </div>
+        <div class="my-1 border-t border-surface-container-high"></div>
+
+        <!-- Role-specific link -->
+        {% if user.role == 'CONTRACTOR' %}
+        <a href="{% url 'ops:my_sites' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">location_on</span>My Assigned Sites
+        </a>
+        {% else %}
+        <a href="{% url 'ops:users' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">group</span>Users
+        </a>
+        {% endif %}
+
+        <div class="my-1 border-t border-surface-container-high"></div>
+        <a href="{% url 'ops:logout' %}" class="{{ item }} text-error hover:bg-error/10" role="menuitem">
+            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">logout</span>Sign Out
+        </a>
+    </div>
+</div>
+{% endwith %}

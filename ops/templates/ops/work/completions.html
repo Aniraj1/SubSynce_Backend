@@ -1,0 +1,73 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}Work Completions - SubSync{% endblock %}
+
+{% block page %}
+<div class="mb-5">
+    <h1 class="text-2xl font-semibold text-ink">Work Completions</h1>
+    <p class="text-ink-light text-sm mt-1">Every work record submitted by contractors.</p>
+</div>
+
+<form method="get" class="mb-4 p-4 card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end" aria-label="Filters">
+    <label class="text-xs text-ink-light lg:col-span-2">Search
+        <input name="q" value="{{ query }}" class="field-input mt-1" placeholder="Site, contractor or notes…">
+    </label>
+    <label class="text-xs text-ink-light">Status
+        <select name="status" class="field-input mt-1">
+            <option value="">All</option>
+            <option value="IN_PROGRESS" {% if status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+            <option value="COMPLETED" {% if status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+            <option value="MISSED" {% if status == 'MISSED' %}selected{% endif %}>Missed</option>
+        </select>
+    </label>
+    <label class="text-xs text-ink-light">From
+        <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" class="field-input mt-1">
+    </label>
+    <label class="text-xs text-ink-light">To
+        <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" class="field-input mt-1">
+    </label>
+    <div class="flex gap-2 sm:col-span-2 lg:col-span-5">
+        <button class="px-4 py-2.5 rounded-xl bg-ink text-surface text-sm font-medium hover:bg-primary transition-colors">Apply</button>
+        <a href="{% url 'ops:completions' %}" class="px-3 py-2.5 text-sm text-ink-light hover:text-ink">Clear</a>
+    </div>
+</form>
+
+<section class="card overflow-hidden">
+    {% if page_obj %}
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[760px] text-sm">
+            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                <tr><th class="px-5 py-3">Site</th><th class="px-5 py-3">Contractor</th><th class="px-5 py-3">Scheduled</th><th class="px-5 py-3">Check-in</th><th class="px-5 py-3">Check-out</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Actions</th></tr>
+            </thead>
+            <tbody class="divide-y divide-surface-container">
+                {% for work in page_obj %}
+                <tr class="hover:bg-surface/60">
+                    <td class="px-5 py-3"><a href="{% url 'ops:completion_detail' work.id %}" class="font-medium text-ink hover:text-primary">{{ work.schedule.site.name }}</a></td>
+                    <td class="px-5 py-3">{{ work.completed_by.username }}</td>
+                    <td class="px-5 py-3 text-ink-light">{{ work.schedule.scheduled_date|date:"j M Y" }}</td>
+                    <td class="px-5 py-3 tabular-nums">{{ work.check_in_time|date:"j M, g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3 tabular-nums">{{ work.check_out_time|date:"j M, g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3"><span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span></td>
+                    <td class="px-5 py-3">
+                        <div class="flex items-center justify-end">
+                            <a href="{% url 'ops:completion_detail' work.id %}" title="View" aria-label="View work record for {{ work.schedule.site.name }}"
+                               class="p-1.5 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
+                                <span class="material-symbols-outlined text-ink-light" style="font-size: 16px;">visibility</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'ops/partials/pagination.html' %}
+    {% else %}
+    <div class="text-center py-12">
+        <span class="material-symbols-outlined text-ink-light" style="font-size: 32px;" aria-hidden="true">task_alt</span>
+        <p class="text-sm text-ink-light mt-2">No work records match these filters.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

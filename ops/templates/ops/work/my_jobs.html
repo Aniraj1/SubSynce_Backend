@@ -1,0 +1,82 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}Services - SubSync{% endblock %}
+
+{% block page %}
+<div class="ui-page-header">
+    <div>
+        <h1 class="ui-title">Services</h1>
+        <p class="ui-subtitle">Your scheduled jobs and finished work.</p>
+    </div>
+    <a href="{% url 'ops:my_calendar' %}" class="ui-btn ui-btn-secondary self-start sm:self-auto">
+        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>Calendar view
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+    <section class="card p-5" aria-labelledby="todo-heading">
+        <h2 id="todo-heading" class="ui-section-title mb-2">Due Now</h2>
+        {% if to_do %}
+        <ul class="divide-y divide-surface-container">
+            {% for job in to_do %}
+            <li class="flex items-center justify-between gap-3 py-3">
+                <div class="min-w-0">
+                    <a href="{% url 'ops:my_job_detail' job.id %}" class="block text-sm font-medium text-ink truncate hover:text-primary hover:underline">{{ job.site.name }}</a>
+                    <p class="text-xs {% if job.scheduled_date < today %}text-error{% else %}text-ink-light{% endif %}">
+                        {{ job.scheduled_date|date:"D j M" }} · {{ job.scheduled_time|time:"g:i A" }}{% if job.scheduled_date < today %} · overdue{% endif %}
+                    </p>
+                </div>
+                {% include 'ops/partials/job_actions.html' %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="ui-empty"><span class="material-symbols-outlined" aria-hidden="true">event_available</span>Nothing to start right now.</div>
+        {% endif %}
+    </section>
+
+    <section class="card p-5" aria-labelledby="upcoming-heading">
+        <h2 id="upcoming-heading" class="ui-section-title mb-2">Upcoming</h2>
+        {% if upcoming %}
+        <ul class="divide-y divide-surface-container">
+            {% for job in upcoming %}
+            <li class="py-3">
+                <a href="{% url 'ops:my_job_detail' job.id %}" class="text-sm font-medium text-ink hover:text-primary hover:underline">{{ job.site.name }}</a>
+                <p class="text-xs text-ink-light">{{ job.scheduled_date|date:"D j M" }} · {{ job.scheduled_time|time:"g:i A" }} · {{ job.site.address }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="ui-empty"><span class="material-symbols-outlined" aria-hidden="true">event_upcoming</span>No upcoming jobs.</div>
+        {% endif %}
+    </section>
+</div>
+
+<section class="card overflow-hidden" aria-labelledby="history-heading">
+    <h2 id="history-heading" class="ui-section-title px-5 py-4">History</h2>
+    {% if history %}
+    <div class="overflow-x-auto">
+        <table class="ui-table w-full text-sm">
+            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                <tr><th class="px-5 py-2">Site</th><th class="px-5 py-2">Date</th><th class="px-5 py-2">Check-in</th><th class="px-5 py-2">Check-out</th><th class="px-5 py-2">Status</th></tr>
+            </thead>
+            <tbody class="divide-y divide-surface-container">
+                {% for work in history %}
+                <tr class="hover:bg-surface/60">
+                    <td class="px-5 py-3"><a href="{% url 'ops:work_detail' work.id %}" class="font-medium text-ink hover:text-primary">{{ work.schedule.site.name }}</a></td>
+                    <td class="px-5 py-3 text-ink-light">{{ work.schedule.scheduled_date|date:"j M Y" }}</td>
+                    <td class="px-5 py-3 tabular-nums">{{ work.check_in_time|time:"g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3 tabular-nums">{{ work.check_out_time|time:"g:i A"|default:"—" }}</td>
+                    <td class="px-5 py-3"><span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'ops/partials/pagination.html' with page_obj=history %}
+    {% else %}
+    <div class="ui-empty border-t border-surface-container-high"><span class="material-symbols-outlined" aria-hidden="true">history</span>No finished jobs yet.</div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - SubSync{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='users' %}
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <main class="flex-1 overflow-y-auto bg-surface">
+            <div class="w-full px-4 sm:px-8 lg:px-14 py-8">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-[#222222]">User Management</h1>
+                        <p class="mt-1 text-base text-[#494949]">Manage system users and their access roles.</p>
+                    </div>
+                    <button type="button" onclick="openUserModal()"
+                            class="self-start flex items-center justify-center gap-1.5 h-10 min-w-[121px] px-4 rounded-lg bg-[#F27E22] hover:bg-primary-hover text-white text-sm transition-colors">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                        Add User
+                    </button>
+                </div>
+
+                <!-- Search + role filter (no Status filter: the User model has no active/inactive field) -->
+                <form method="get" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+                    <div class="relative w-full md:w-1/2 min-w-0">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">search</span>
+                        <input type="text" name="q" value="{{ query }}" placeholder="Search by name or email..."
+                               class="w-full h-11 pl-11 pr-4 rounded-md bg-white border border-[#E2E2E2] text-xs text-[#222222] placeholder:text-[#494949]/60 focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30 focus:border-[#F27E22]">
+                    </div>
+                    <div class="relative w-full sm:w-[150px] shrink-0">
+                        <select name="role" onchange="this.form.submit()" aria-label="Filter by role"
+                                class="appearance-none w-full h-[34px] pl-3 pr-8 rounded-md bg-white border border-[#E2E2E2] text-xs text-[#222222] focus:outline-none focus:border-[#F27E22]">
+                            <option value="">All Roles</option>
+                            {% for value, label in role_choices %}<option value="{{ value }}" {% if role == value %}selected{% endif %}>{{ label|lower|capfirst }}</option>{% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 16px;">expand_more</span>
+                    </div>
+                </form>
+
+                <!-- Users table -->
+                <section class="bg-white rounded-2xl border border-[#5B5A77]/20 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[760px] table-fixed text-left text-xs text-[#222222]">
+                            <colgroup>
+                                <col class="w-[26%]"><col class="w-[30%]"><col class="w-[15%]"><col class="w-[16%]"><col>
+                            </colgroup>
+                            <thead class="bg-[#F3F3F3] text-[#494949] uppercase border-b border-[#E9E9E9]">
+                                <tr>
+                                    <th class="px-6 py-3.5 font-medium">Name</th>
+                                    <th class="px-6 py-3.5 font-medium">Email</th>
+                                    <th class="px-6 py-3.5 font-medium">Role</th>
+                                    <th class="px-6 py-3.5 font-medium">Last Active</th>
+                                    <th class="px-6 py-3.5 font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in page_obj %}
+                                <tr class="border-b border-[#E9E9E9]">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <span class="w-8 h-8 shrink-0 rounded-full bg-[#FAF2E8] text-[#F27E22] text-[11px] font-semibold flex items-center justify-center">{{ u.initials }}</span>
+                                            <span class="font-medium truncate">{{ u.display_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-[#494949] break-words">{{ u.email|default:'—' }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-block px-3 py-1 rounded-md text-[10px]
+                                            {% if u.role == 'OWNER' %}bg-[#FDEEE4] text-[#F27E22]{% elif u.role == 'ADMINISTRATOR' %}bg-[#E3F0FF] text-[#4A90E2]{% else %}bg-[#EEEAFD] text-[#7C6AE8]{% endif %}">
+                                            {{ u.get_role_display|lower|capfirst }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-[#494949] whitespace-nowrap" {% if u.last_login %}title="{{ u.last_login|date:'D d M Y, g:i A' }}"{% endif %}>{{ u.last_active }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <button type="button" onclick="openUserModal(this.dataset)"
+                                                    data-action="{% url 'ops:user_update' u.id %}" data-username="{{ u.username }}" data-email="{{ u.email }}"
+                                                    data-role="{{ u.role }}" data-first-name="{{ u.detail.first_name|default:'' }}" data-last-name="{{ u.detail.last_name|default:'' }}"
+                                                    {% if u.can_manage %}title="Edit user"{% else %}disabled title="{% if u.pk == user.pk %}You can't edit your own account here{% else %}You can't manage this role{% endif %}"{% endif %}
+                                                    class="w-8 h-8 flex items-center justify-center rounded-md border border-[#E2E2E2] text-[#3B5BDB] hover:bg-[#F3F3F3] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                                <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                                            </button>
+                                            <form method="post" action="{% url 'ops:user_delete' u.id %}"
+                                                  onsubmit="return confirm('Remove {{ u.display_name|escapejs }}? They will no longer be able to sign in.');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                                <button type="submit" {% if u.can_manage %}title="Delete user"{% else %}disabled title="{% if u.pk == user.pk %}You can't delete your own account{% else %}You can't manage this role{% endif %}"{% endif %}
+                                                        class="w-8 h-8 flex items-center justify-center rounded-md border border-[#E2E2E2] text-[#EF4444] hover:bg-[#EF4444]/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr class="border-b border-[#E9E9E9]">
+                                    <td colspan="5" class="px-6 py-12 text-center text-[#494949]">{% if filter_qs %}No users match your search or filters.{% else %}No users yet.{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer: count + only the page links that really exist -->
+                    {% if total_users %}
+                    {% with pg='w-[22px] h-[22px] flex items-center justify-center rounded border text-[11px]' %}
+                    <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
+                        <p class="text-[11px] text-[#494949]">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_users }} users</p>
+                        {% if page_obj.paginator.num_pages > 1 %}
+                        <nav class="flex items-center gap-2" aria-label="Pagination">
+                            {% if page_obj.has_previous %}
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.previous_page_number }}" aria-label="Previous page" class="{{ pg }} border-[#E2E2E2] text-[#222222] hover:bg-[#F3F3F3] mr-5">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">chevron_left</span>
+                            </a>
+                            {% else %}
+                            <span class="{{ pg }} border-[#E2E2E2] text-[#494949]/40 mr-5" aria-hidden="true"><span class="material-symbols-outlined" style="font-size: 14px;">chevron_left</span></span>
+                            {% endif %}
+                            {% for num in page_obj.paginator.page_range %}
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ num }}" {% if num == page_obj.number %}aria-current="page"{% endif %}
+                               class="{{ pg }} {% if num == page_obj.number %}bg-[#FAF2E8] border-[#F27E22]/30 text-[#F27E22]{% else %}border-[#E2E2E2] text-[#222222] hover:bg-[#F3F3F3]{% endif %}">{{ num }}</a>
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.next_page_number }}" aria-label="Next page" class="{{ pg }} border-[#E2E2E2] text-[#222222] hover:bg-[#F3F3F3] ml-5">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+                            </a>
+                            {% else %}
+                            <span class="{{ pg }} border-[#E2E2E2] text-[#494949]/40 ml-5" aria-hidden="true"><span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span></span>
+                            {% endif %}
+                        </nav>
+                        {% endif %}
+                    </div>
+                    {% endwith %}
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add / Edit User modal -->
+{% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
+<div id="user-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeUserModal();">
+    <div class="bg-white rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 id="user-modal-title" class="text-lg font-semibold text-ink">Add User</h2>
+            <button type="button" onclick="closeUserModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        <form id="user-form" method="post" action="{% url 'ops:user_create' %}">
+            {% csrf_token %}
+            {% for e in user_form_state.errors.non_field %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="{{ label }}" for="user-first-name">First Name *</label>
+                    <input type="text" name="first_name" id="user-first-name" required maxlength="255" class="{{ field }}">
+                    {% for e in user_form_state.errors.first_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="{{ label }}" for="user-last-name">Last Name</label>
+                    <input type="text" name="last_name" id="user-last-name" maxlength="255" class="{{ field }}">
+                    {% for e in user_form_state.errors.last_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="{{ label }}" for="user-username">Username *</label>
+                    <input type="text" name="username" id="user-username" required maxlength="255" autocomplete="off" class="{{ field }}">
+                    {% for e in user_form_state.errors.username %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="{{ label }}" for="user-email">Email *</label>
+                    <input type="email" name="email" id="user-email" required class="{{ field }}">
+                    {% for e in user_form_state.errors.email %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="{{ label }}" for="user-role">Role *</label>
+                    <select name="role" id="user-role" required class="{{ field }}">
+                        {% for value, text in form.fields.role.choices %}<option value="{{ value }}">{{ text|lower|capfirst }}</option>{% endfor %}
+                    </select>
+                    {% for e in user_form_state.errors.role %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <!-- Passwords are only set when adding; existing users use the Forgot Password flow -->
+                <div id="user-password-fields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="{{ label }}" for="user-password1">Password *</label>
+                        <input type="password" name="password1" id="user-password1" required autocomplete="new-password" class="{{ field }}">
+                    <p class="mt-1 text-[11px] text-ink-light">At least 8 characters with an uppercase letter, a lowercase letter, a number and a special character (@#$%!^&amp;*). Not too similar to the username or email.</p>{% for e in user_form_state.errors.password1 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                    </div>
+                    <div>
+                        <label class="{{ label }}" for="user-password2">Confirm Password *</label>
+                        <input type="password" name="password2" id="user-password2" required autocomplete="new-password" class="{{ field }}">
+                    {% for e in user_form_state.errors.password2 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeUserModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">Save User</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+{{ user_form_state.modal|json_script:"user-form-reopen" }}
+<script>
+    // Opens the modal empty for Add, or pre-filled from an edit button's data-* attributes.
+    function openUserModal(data, keepErrors) {
+        data = data || {};
+        if (!keepErrors) document.querySelectorAll('#user-form .form-error').forEach(function (el) { el.remove(); });
+        const editing = !!data.action;
+        const form = document.getElementById('user-form');
+        form.reset();
+        form.action = data.action || '{% url "ops:user_create" %}';
+        document.getElementById('user-modal-title').textContent = editing ? 'Edit User' : 'Add User';
+        document.getElementById('user-first-name').value = data.firstName || '';
+        document.getElementById('user-last-name').value = data.lastName || '';
+        document.getElementById('user-username').value = data.username || '';
+        document.getElementById('user-email').value = data.email || '';
+        if (data.role) document.getElementById('user-role').value = data.role;
+        document.getElementById('user-password-fields').classList.toggle('hidden', editing);
+        document.querySelectorAll('#user-password-fields input').forEach(function (input) { input.disabled = editing; });
+        const modal = document.getElementById('user-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeUserModal() {
+        const modal = document.getElementById('user-modal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeUserModal();
+    });
+
+    // A failed Add/Edit redirects back here: reopen the modal with the typed values and errors.
+    const reopen = JSON.parse(document.getElementById('user-form-reopen').textContent);
+    if (reopen) openUserModal(reopen, true);
+</script>
+{% endblock %}

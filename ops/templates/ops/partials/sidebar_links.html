@@ -1,0 +1,18 @@
+{# Contractor navigation, rendered inside the shared partials/_sidebar.html shell. Mirrors the ContractorDashboard API: sites, services, invoices, earnings. #}
+{% load ops_extras %}
+{% with item='ui-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors' %}
+<div class="space-y-1">
+    <a href="{% url 'ops:dashboard' %}" class="{{ item }} {% nav_class 'dashboard' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
+    </a>
+    <a href="{% url 'ops:my_sites' %}" class="{{ item }} {% nav_class 'my_sites' 'my_site_detail' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Sites</span>
+    </a>
+    <a href="{% url 'ops:my_jobs' %}" class="{{ item }} {% nav_class 'my_jobs' 'my_job_detail' 'my_calendar' 'clock_out' 'work_detail' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Services</span>
+    </a>
+    <a href="{% url 'ops:invoices' %}" class="{{ item }} {% nav_class 'invoices' 'invoice_detail' 'invoice_create' 'invoice_edit' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>Invoices</span>
+    </a>
+</div>
+{% endwith %}

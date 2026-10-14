@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Contractor Portal - SubSync{% endblock %}
+
+{% block content %}
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-card">Skip to content</a>
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' with display_name=full_name role_label='Contractor' %}
+
+        <main id="main" class="flex-1 overflow-y-auto bg-surface">
+            <div class="ui-page">
+                <div class="ui-page-header">
+                    <div>
+                        <h1 class="ui-title">Contractor Portal</h1>
+                        <p class="ui-subtitle">Welcome back, {{ full_name }}. Here's your overview for today.</p>
+                    </div>
+                </div>
+
+                <!-- Summary cards: the ContractorDashboard API's sites / services / invoices / earnings (own data only) -->
+                {% with card='card ui-card-link p-5 flex items-start justify-between gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40' d=dashboard %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+                    <a href="{% url 'ops:my_sites' %}" class="{{ card }}" aria-label="View my sites">
+                        <div class="min-w-0"><p class="ui-metric-label">Assigned Sites</p><p class="ui-metric">{{ d.sites.assigned }}</p><p class="ui-metric-hint">Site{{ d.sites.assigned|pluralize }} assigned to you</p></div>
+                        <span class="ui-card-icon bg-primary/10 text-primary"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">location_on</span></span>
+                    </a>
+                    <a href="{% url 'ops:my_jobs' %}" class="{{ card }}" aria-label="View my services">
+                        <div class="min-w-0"><p class="ui-metric-label">Services</p><p class="ui-metric">{{ d.services.scheduled }}</p><p class="ui-metric-hint">Scheduled · {{ d.services.completed }} completed</p></div>
+                        <span class="ui-card-icon bg-violet/10 text-violet"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">event_available</span></span>
+                    </a>
+                    <a href="{% url 'ops:invoices' %}" class="{{ card }}" aria-label="View my invoices">
+                        <div class="min-w-0"><p class="ui-metric-label">Invoices</p><p class="ui-metric">{{ d.invoices.pending }}</p><p class="ui-metric-hint">Pending · {{ d.invoices.approved }} approved · {{ d.invoices.rejected }} rejected</p></div>
+                        <span class="ui-card-icon bg-warning/10 text-warning"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">receipt_long</span></span>
+                    </a>
+                    <a href="{% url 'ops:invoices' %}" class="{{ card }}" aria-label="View my earnings in My Invoices">
+                        <div class="min-w-0"><p class="ui-metric-label">Earnings</p><p class="ui-metric">${{ d.earnings.total_earnings|floatformat:"2g" }}</p><p class="ui-metric-hint">From {{ d.earnings.approved_invoice_count }} approved invoice{{ d.earnings.approved_invoice_count|pluralize }}</p></div>
+                        <span class="ui-card-icon bg-success/10 text-success"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">payments</span></span>
+                    </a>
+                </div>
+
+                <!-- Services by status (same five counts as the API's `services`) -->
+                <section class="card px-5 py-4 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2" aria-label="Services by status">
+                    <h2 class="ui-section-title mr-2">Services</h2>
+                    <span class="pill pill-scheduled">Scheduled {{ d.services.scheduled }}</span>
+                    <span class="pill pill-in_progress">In progress {{ d.services.in_progress }}</span>
+                    <span class="pill pill-completed">Completed {{ d.services.completed }}</span>
+                    <span class="pill pill-missed">Missed {{ d.services.missed }}</span>
+                    <span class="pill pill-cancelled">Cancelled {{ d.services.cancelled }}</span>
+                </section>
+                {% endwith %}
+
+                <div>
+                    <!-- Assigned Jobs: only schedules on sites assigned to this contractor -->
+                    <section class="w-full min-w-0 card p-5" aria-labelledby="jobs-heading">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h2 id="jobs-heading" class="ui-section-title">Assigned Jobs</h2>
+                            <!-- "View all" opens Services; there is no weekly view yet -->
+                            <div class="flex items-center gap-2">
+                                <button type="button" disabled title="Weekly view isn't built yet" class="ui-btn ui-btn-secondary ui-btn-sm">Weekly</button>
+                                <a href="{% url 'ops:my_jobs' %}" class="ui-btn ui-btn-secondary ui-btn-sm">View all</a>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-surface-container-high divide-y divide-surface-container">
+                            {% for job in assigned_jobs %}
+                            <div class="flex items-center gap-3 sm:gap-5 px-4 py-4">
+                                <div class="w-14 shrink-0">
+                                    <p class="text-base font-medium text-primary leading-tight tabular-nums">{{ job.time|time:"h:i" }}</p>
+                                    <p class="text-xs text-ink">{{ job.time|time:"A" }}</p>
+                                    {% if not job.is_today %}<p class="text-[11px] text-ink-light">{{ job.date|date:"D d M" }}</p>{% endif %}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <a href="{% url 'ops:my_job_detail' job.id %}" class="block text-sm font-medium text-ink truncate hover:text-primary hover:underline">{{ job.site_name }}</a>
+                                    <p class="text-xs text-ink-light truncate">{{ job.site_address }}</p>
+                                    {% if job.service_info %}<span class="inline-block mt-1.5 px-2 py-0.5 rounded-md bg-surface-container text-ink text-[11px]">{{ job.service_info|capfirst }}</span>{% endif %}
+                                </div>
+                                <span class="pill shrink-0 {% if job.status == 'In Progress' %}pill-in_progress{% elif job.status == 'Completed' %}pill-completed{% elif job.status == 'Scheduled' %}pill-scheduled{% elif job.status == 'Missed' %}pill-missed{% else %}pill-cancelled{% endif %}">{{ job.status }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="ui-empty"><span class="material-symbols-outlined" aria-hidden="true">event_busy</span>No assigned jobs.</div>
+                            {% endfor %}
+                        </div>
+                        {% if assigned_jobs %}<p class="mt-3 text-xs text-ink-light">Showing 1 to {{ assigned_jobs|length }} of {{ assigned_jobs|length }} jobs</p>{% endif %}
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% load ops_extras %}
+{% if jobs %}
+<ul class="divide-y divide-surface-container">
+    {% for job in jobs %}
+    <li class="py-2.5 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+            <p class="text-sm font-medium text-ink">{{ job.scheduled_time|time:"g:i A" }} · {{ job.site.name }}</p>
+            <p class="text-xs text-ink-light">{{ job.site.address }}{% if scope == 'all' %} · {{ job.site.assigned_contractor.username|default:"Unassigned" }}{% endif %}</p>
+            {% if scope == 'mine' %}
+            <div class="mt-2">{% include 'ops/partials/job_actions.html' %}</div>
+            {% elif job.work_completion %}
+            <a href="{% url 'ops:completion_detail' job.work_completion.id %}" class="text-xs font-medium text-primary hover:underline">View work record</a>
+            {% endif %}
+        </div>
+        <span class="pill pill-{{ job.display_status|lower }} shrink-0">{{ job.display_status|label }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="ui-empty ui-empty-sm text-sm text-ink-light">No jobs on this day.</p>
+{% endif %}

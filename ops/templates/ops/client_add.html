@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Client - SubSync{% endblock %}
+
+{% block content %}
+{% with input='w-full h-9 px-4 rounded-md bg-white border text-sm text-[#222222] placeholder:text-[#494949]/50 focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30 focus:border-[#F27E22] transition-colors' ok='border-[#494949]/25' bad='border-[#FF383C]' label='flex items-center gap-1.5 text-xs font-medium text-[#222222]' err='text-[11px] leading-5 text-[#FF383C]' hint='text-[11px] leading-5 text-[#494949]' card='bg-white border-[0.6px] border-[#5B5A77]/20 rounded-2xl p-6' %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='clients' %}
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <main class="flex-1 overflow-y-auto bg-surface">
+            <div class="w-full max-w-[1024px] mx-auto px-4 sm:px-8 lg:px-12 py-8">
+                <!-- Breadcrumb -->
+                <nav class="flex items-center gap-1.5 text-xs text-[#494949]" aria-label="Breadcrumb">
+                    <a href="{% url 'ops:clients' %}" class="hover:text-[#222222] transition-colors">Clients</a>
+                    <span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+                    <span class="text-[#222222] font-medium" aria-current="page">Add Client</span>
+                </nav>
+                <h1 class="mt-3 text-2xl font-semibold text-[#222222]">Add Client</h1>
+                <p class="mb-8 text-sm leading-6 text-[#494949]">Create a new client record and add their contact details.</p>
+
+                <!-- Form card -->
+                    <form method="post" action="{% url 'ops:client_create' %}" enctype="multipart/form-data" novalidate
+                          class="{{ card }} w-full flex flex-col gap-10">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="rounded-lg border border-[#FF383C]/30 bg-[#FF383C]/5 px-4 py-3">
+                            {% for error in form.non_field_errors %}<p class="text-xs text-[#FF383C]">{{ error }}</p>{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- User Information -->
+                        <section class="flex flex-col gap-6">
+                            <h2 class="text-base font-medium text-[#202224]">User Information</h2>
+                            <div class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-2">
+                                    <label for="field-full-name" class="{{ label }}">Full name <span class="text-[#FF383C]">*</span></label>
+                                    <input type="text" name="full_name" id="field-full-name" value="{{ form.full_name.value|default_if_none:'' }}"
+                                           placeholder="Tessa Nguyen" maxlength="511" required
+                                           class="{{ input }} {% if form.full_name.errors %}{{ bad }}{% else %}{{ ok }}{% endif %}">
+                                    {% for error in form.full_name.errors %}<p class="{{ err }}">{{ error }}</p>{% endfor %}
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+                                    <label for="field-email" class="{{ label }}">Email address <span class="text-[#FF383C]">*</span></label>
+                                    <input type="email" name="email" id="field-email" value="{{ form.email.value|default_if_none:'' }}"
+                                           placeholder="123456@example.com" required
+                                           class="{{ input }} {% if form.email.errors %}{{ bad }}{% else %}{{ ok }}{% endif %}">
+                                    {% for error in form.email.errors %}<p class="{{ err }}">{{ error }}</p>{% endfor %}
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+                                    <label for="field-phone" class="{{ label }}">Phone number <span class="text-[#FF383C]">*</span></label>
+                                    <div class="flex items-center h-9 w-full rounded-md bg-white border focus-within:ring-2 focus-within:ring-[#F27E22]/30 focus-within:border-[#F27E22] {% if form.phone.errors %}{{ bad }}{% else %}{{ ok }}{% endif %}">
+                                        <!-- AU country code (visual only) -->
+                                        <div class="flex items-center gap-2 h-full px-2 border-r border-[#494949]/25 shrink-0 select-none">
+                                            <span class="text-base leading-none" aria-hidden="true">🇦🇺</span>
+                                            <span class="material-symbols-outlined text-[#494949]/60" style="font-size: 14px;">expand_more</span>
+                                        </div>
+                                        <input type="text" name="phone" id="field-phone" value="{{ form.phone.value|default_if_none:'' }}"
+                                               placeholder="+61 423 234 567" maxlength="255" inputmode="tel" required
+                                               class="flex-1 min-w-0 h-full bg-transparent border-0 px-3 text-sm text-[#222222] placeholder:text-[#494949]/50 focus:outline-none">
+                                    </div>
+                                    {% for error in form.phone.errors %}<p class="{{ err }}">{{ error }}</p>{% endfor %}
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+                                    <!-- Assigned sites: checkbox dropdown, submits like a multi-select -->
+                                    <div class="flex flex-col gap-2 w-full sm:flex-1 sm:min-w-0">
+                                        <span class="{{ label }}">Assigned sites</span>
+                                        <div class="relative" id="sites-dropdown">
+                                            <button type="button" onclick="toggleSites()" aria-haspopup="listbox"
+                                                    class="{{ input }} {% if form.assigned_sites.errors %}{{ bad }}{% else %}{{ ok }}{% endif %} flex items-center justify-between text-left">
+                                                <span id="sites-summary" class="truncate text-[#494949]/50">Select sites</span>
+                                                <span class="material-symbols-outlined text-[#494949]/60 shrink-0" style="font-size: 16px;">expand_more</span>
+                                            </button>
+                                            <div id="sites-panel" class="hidden absolute z-20 mt-1 w-full max-h-56 overflow-y-auto rounded-md bg-white border border-[#494949]/25 shadow-lg py-1">
+                                                {% for site in form.fields.assigned_sites.queryset %}
+                                                <label class="flex items-start gap-2 px-3 py-2 text-sm text-[#222222] hover:bg-[#FAF2E8] cursor-pointer">
+                                                    <input type="checkbox" name="assigned_sites" value="{{ site.id }}" data-name="{{ site.name }}"
+                                                           class="mt-0.5 accent-[#F27E22]" {% if site.id|stringformat:'s' in form.assigned_sites.value|default_if_none:''|join:',' %}checked{% endif %}>
+                                                    <span class="min-w-0">{{ site.name }}<span class="block text-[11px] text-[#494949] truncate">{{ site.address }}</span></span>
+                                                </label>
+                                                {% empty %}
+                                                <p class="px-3 py-2 text-xs text-[#494949]">No sites available yet.</p>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p class="{{ hint }}">Assign one or more sites to the user. Sites can be assigned to contractors.</p>
+                                        {% for error in form.assigned_sites.errors %}<p class="{{ err }}">{{ error }}</p>{% endfor %}
+                                    </div>
+
+                                    <div class="flex flex-col gap-2 w-full sm:flex-1 sm:min-w-0">
+                                        <label for="field-status" class="{{ label }}">Status <span class="text-[#FF383C]">*</span></label>
+                                        <div class="relative">
+                                            <select name="status" id="field-status" required
+                                                    class="{{ input }} {% if form.status.errors %}{{ bad }}{% else %}{{ ok }}{% endif %} appearance-none pr-9">
+                                                {% for value, text in form.fields.status.choices %}{% if value %}
+                                                <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ text }}</option>
+                                                {% endif %}{% endfor %}
+                                            </select>
+                                            <span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#494949]/60" style="font-size: 16px;">expand_more</span>
+                                        </div>
+                                        {% for error in form.status.errors %}<p class="{{ err }}">{{ error }}</p>{% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="flex items-center justify-between">
+                            <a href="{% url 'ops:clients' %}"
+                               class="px-3.5 py-2 rounded-lg bg-white border-[0.8px] border-[#ADADAD]/50 text-xs font-medium text-[#222222] hover:bg-[#F3F3F3] transition-colors">Cancel</a>
+                            <button type="submit"
+                                    class="px-3.5 py-2 rounded-lg bg-[#F27E22] hover:bg-primary-hover text-white text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30">Save Client</button>
+                        </div>
+                    </form>
+            </div>
+        </main>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Assigned sites dropdown: show selected site names in the trigger.
+    const sitesPanel = document.getElementById('sites-panel');
+    const sitesSummary = document.getElementById('sites-summary');
+
+    function toggleSites() {
+        sitesPanel.classList.toggle('hidden');
+    }
+
+    function updateSitesSummary() {
+        const names = Array.from(sitesPanel.querySelectorAll('input:checked')).map(function (cb) { return cb.dataset.name; });
+        sitesSummary.textContent = names.length ? names.join(', ') : 'Select sites';
+        sitesSummary.classList.toggle('text-[#494949]/50', !names.length);
+    }
+
+    sitesPanel.addEventListener('change', updateSitesSummary);
+    document.addEventListener('click', function (event) {
+        if (!document.getElementById('sites-dropdown').contains(event.target)) sitesPanel.classList.add('hidden');
+    });
+    updateSitesSummary();
+</script>
+{% endblock %}

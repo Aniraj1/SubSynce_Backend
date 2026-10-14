@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load ops_extras %}
+
+{% block title %}{{ site.name }} - SubSync{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='sites' %}
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <main class="flex-1 overflow-y-auto bg-surface">
+            <div class="w-full max-w-[1184px] px-4 sm:px-8 lg:px-14 py-8">
+                <!-- Breadcrumb + title + actions -->
+                <nav class="flex flex-wrap items-center gap-1.5 text-xs text-[#888]">
+                    <a href="{% url 'ops:sites' %}" class="hover:text-primary">Sites</a>
+                    <span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+                    <span>{{ site.name }}</span>
+                </nav>
+                <div class="mt-3 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h1 class="text-2xl font-semibold text-[#222222] break-words">{{ site.name }}</h1>
+                    {% url 'ops:sites' as sites_url %}
+                    <div class="[&>div]:justify-start">{% include 'ops/partials/_site_actions.html' with delete_next=sites_url %}</div>
+                </div>
+
+                <!-- Site details -->
+                {% with freq=site.cleaning_frequency|lower %}
+                <section class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6" aria-labelledby="details-heading">
+                    <h2 id="details-heading" class="text-base font-semibold text-[#222222] mb-5">Site Details</h2>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-sm">
+                        <div>
+                            <dt class="text-[#888]">Client</dt>
+                            <dd class="mt-1 font-medium text-[#222222]"><a href="{% url 'ops:client_detail' site.client_id_id %}" class="hover:text-[#F27E22] hover:underline">{{ site.client_id.first_name }} {{ site.client_id.last_name|default:'' }}</a></dd>
+                        </div>
+                        <div>
+                            <dt class="text-[#888]">Address</dt>
+                            <dd class="mt-1 font-medium text-[#222222] break-words">{{ site.address }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[#888]">Frequency</dt>
+                            <dd class="mt-1">
+                                <span class="inline-block px-3 py-1 rounded-md text-[11px]
+                                    {% if freq == 'daily' %}bg-[#E3F0FF] text-[#4A90E2]{% elif freq == 'weekly' %}bg-[#E3F8EC] text-[#34C27A]{% else %}bg-[#F3F3F3] text-[#494949]{% endif %}">
+                                    {{ site.cleaning_frequency|lower|capfirst }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-[#888]">Price per service</dt>
+                            <dd class="mt-1 font-medium text-[#222222] tabular-nums">{{ site.price|money }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[#888]">Contractor</dt>
+                            <dd class="mt-1 font-medium text-[#222222]">{% if contractor_name %}{{ contractor_name }}{% else %}<span class="font-normal text-[#494949]/60">Not assigned</span>{% endif %}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-[#888]">Next service</dt>
+                            <dd class="mt-1 font-medium text-[#222222]">{% if next_service %}{{ next_service.scheduled_date|date:"D j M Y" }}{% if next_service.scheduled_time %}, {{ next_service.scheduled_time|time:"g:i A" }}{% endif %}{% else %}<span class="font-normal text-[#494949]/60">None scheduled</span>{% endif %}</dd>
+                        </div>
+                        <div class="sm:col-span-2 lg:col-span-3">
+                            <dt class="text-[#888]">Cleaning instructions</dt>
+                            <dd class="mt-1 text-[#222222] whitespace-pre-line break-words">{{ site.cleaning_instructions|default:"No instructions added." }}</dd>
+                        </div>
+                    </dl>
+                </section>
+                {% endwith %}
+
+                <!-- Photos -->
+                <section class="mt-6 bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6" aria-labelledby="photos-heading">
+                    <h2 id="photos-heading" class="text-base font-semibold text-[#222222] mb-5">Photos <span class="text-[#888] font-normal">({{ site.images.all|length }})</span></h2>
+                    {% if site.images.all %}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {% for img in site.images.all %}
+                        <a href="{{ img.image.url }}" target="_blank" rel="noopener" title="Open full size"
+                           class="block aspect-[4/3] rounded-xl overflow-hidden border border-surface-container-high bg-surface-container hover:opacity-90 transition-opacity">
+                            <img src="{{ img.image.url }}" alt="{{ site.name }} photo {{ forloop.counter }}" loading="lazy" class="w-full h-full object-cover">
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="flex flex-col items-center justify-center gap-2 py-10 text-sm text-[#494949]">
+                        <span class="material-symbols-outlined text-[#494949]/50" style="font-size: 32px;" aria-hidden="true">image</span>
+                        No photos yet. Use Edit to add some.
+                    </div>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% include 'ops/partials/_site_form_modal.html' %}
+{% endblock %}

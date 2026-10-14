@@ -1,0 +1,68 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}Client Invoices - SubSync{% endblock %}
+
+{% block page %}
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+    <div>
+        <h1 class="text-2xl font-semibold text-ink">Client Invoices</h1>
+        <p class="text-ink-light text-sm mt-1">Invoices the company sends to clients. Paid invoices count as revenue.</p>
+    </div>
+    <a href="{% url 'ops:client_invoice_create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors">
+        <span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">add</span>New Client Invoice
+    </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+    {% include 'ops/partials/stat_card.html' with icon='schedule_send' tone='primary' value=totals.outstanding_total|default:0|money label='Outstanding' hint=totals.outstanding_count|stringformat:'d'|add:' unpaid' %}
+    {% include 'ops/partials/stat_card.html' with icon='payments' tone='success' value=totals.paid_total|default:0|money label='Paid (revenue)' %}
+    {% include 'ops/partials/stat_card.html' with icon='running_with_errors' tone='error' value=totals.overdue_count label='Overdue' hint=totals.overdue_total|default:0|money %}
+</div>
+
+<form method="get" class="mb-4 flex flex-col sm:flex-row gap-3 sm:items-end" aria-label="Filters">
+    <label class="text-xs text-ink-light flex-1">Search
+        <input name="q" value="{{ query }}" class="field-input mt-1" placeholder="Invoice number, site or client…">
+    </label>
+    <label class="text-xs text-ink-light">Status
+        <select name="status" class="field-input mt-1">
+            <option value="">All</option>
+            {% for s in statuses %}<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|label }}</option>{% endfor %}
+        </select>
+    </label>
+    <button class="px-4 py-2.5 rounded-xl bg-ink text-surface text-sm font-medium hover:bg-primary transition-colors">Apply</button>
+</form>
+
+<section class="card overflow-hidden">
+    {% if page_obj %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                <tr>
+                    <th class="px-5 py-3">Invoice</th><th class="px-5 py-3">Client</th><th class="px-5 py-3">Site</th>
+                    <th class="px-5 py-3">Period</th><th class="px-5 py-3 text-right">Amount</th><th class="px-5 py-3">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-surface-container">
+                {% for inv in page_obj %}
+                <tr class="hover:bg-surface/60">
+                    <td class="px-5 py-3"><a href="{% url 'ops:client_invoice_detail' inv.pk %}" class="font-medium text-ink hover:text-primary tabular-nums">{{ inv.invoice_number }}</a><div class="text-xs text-ink-light">{{ inv.invoice_date|date:"j M Y" }}</div></td>
+                    <td class="px-5 py-3">{{ inv.client.first_name }} {{ inv.client.last_name|default:"" }}</td>
+                    <td class="px-5 py-3">{{ inv.site.name }}</td>
+                    <td class="px-5 py-3 text-ink-light whitespace-nowrap">{{ inv.service_period_start|date:"j M" }} – {{ inv.service_period_end|date:"j M Y" }}</td>
+                    <td class="px-5 py-3 text-right font-semibold tabular-nums">{{ inv.amount|money }}{% if inv.gst %}<span class="block text-xs font-normal text-ink-light">+ GST</span>{% endif %}</td>
+                    <td class="px-5 py-3"><span class="pill pill-{{ inv.status|lower }}">{{ inv.status|label }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'ops/partials/pagination.html' %}
+    {% else %}
+    <div class="text-center py-12">
+        <span class="material-symbols-outlined text-ink-light" style="font-size: 32px;" aria-hidden="true">request_quote</span>
+        <p class="text-sm text-ink-light mt-2">{% if query or status %}No client invoices match.{% else %}No client invoices yet.{% endif %}</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

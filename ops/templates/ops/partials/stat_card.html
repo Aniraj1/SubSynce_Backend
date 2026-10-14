@@ -1,0 +1,19 @@
+{% comment %}Usage: include with icon, tone (primary|success|warning|error), value, label, hint{% endcomment %}
+{% if user.role == 'CONTRACTOR' %}
+<div class="card p-5 flex items-start justify-between gap-3">
+    <div class="min-w-0"><p class="ui-metric-label">{{ label }}</p><p class="ui-metric">{{ value }}</p>{% if hint %}<p class="ui-metric-hint">{{ hint }}</p>{% endif %}</div>
+    <span class="ui-card-icon bg-{{ tone|default:'primary' }}/10 text-{{ tone|default:'primary' }}"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">{{ icon }}</span></span>
+</div>
+{% else %}
+{% comment %}Usage: include with icon, tone (primary|success|warning|error), value, label, hint; optional value_class (e.g. text-error) for the number{% endcomment %}
+<div class="card p-5 ">
+    <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-xl bg-{{ tone|default:'primary' }}/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-{{ tone|default:'primary' }}" style="font-size: 22px;" aria-hidden="true">{{ icon }}</span>
+        </div>
+        {% if hint %}<span class="text-xs text-ink-light">{{ hint }}</span>{% endif %}
+    </div>
+    <p class="text-2xl font-bold {{ value_class|default:'text-ink' }} tabular-nums">{{ value }}</p>
+    <p class="text-sm text-ink-light mt-0.5">{{ label }}</p>
+</div>
+{% endif %}

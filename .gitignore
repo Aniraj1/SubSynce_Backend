@@ -128,8 +128,6 @@ dmypy.json
 .pyre/
 .idea/
 
-static
-
 # Google drive credential file
 client_secret.json
 
@@ -145,4 +143,9 @@ resources.yaml
 # Uploaded site images
 site_images/
 
+<<<<<<< HEAD
+# User-uploaded media (client photos, site images, etc.)
+/media/
+=======
 work_evidence/
+>>>>>>> main

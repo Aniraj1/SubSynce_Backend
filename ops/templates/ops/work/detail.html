@@ -1,0 +1,47 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}Work Record - SubSync{% endblock %}
+
+{% block page %}
+<div class="max-w-3xl">
+    {% if user.role == 'CONTRACTOR' %}
+    <a href="{% url 'ops:my_jobs' %}" class="ui-back inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>Services</a>
+    {% else %}
+    <a href="{% url 'ops:completions' %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>Work Completions</a>
+    {% endif %}
+    <div class="flex flex-wrap items-center gap-3">
+        <h1 class="ui-title text-2xl font-semibold text-ink">{{ work.schedule.site.name }}</h1>
+        <span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span>
+    </div>
+    <p class="ui-subtitle text-ink-light text-sm mt-1">{{ work.schedule.site.address }}</p>
+
+    <dl class="ui-facts mt-5 p-5 card grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+        <div><dt class="text-ink-light">Scheduled</dt><dd class="font-medium text-ink">{{ work.schedule.scheduled_date|date:"D j M Y" }}, {{ work.schedule.scheduled_time|time:"g:i A" }}</dd></div>
+        <div><dt class="text-ink-light">Check-in</dt><dd class="font-medium text-ink tabular-nums">{{ work.check_in_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+        <div><dt class="text-ink-light">Check-out</dt><dd class="font-medium text-ink tabular-nums">{{ work.check_out_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+        <div><dt class="text-ink-light">Time on site</dt><dd class="font-medium text-ink">{% if duration %}{{ duration|stringformat:"s"|slice:":-3" }} h{% else %}—{% endif %}</dd></div>
+        <div><dt class="text-ink-light">Contractor</dt><dd class="font-medium text-ink">{{ work.completed_by.username }}</dd></div>
+        <div><dt class="text-ink-light">Client</dt><dd class="font-medium text-ink">{{ work.schedule.site.client_id.first_name }} {{ work.schedule.site.client_id.last_name|default:"" }}</dd></div>
+        <div class="col-span-2 md:col-span-3"><dt class="text-ink-light">Location</dt><dd class="text-ink">{{ work.location|default:"—" }}</dd></div>
+        <div class="col-span-2 md:col-span-3"><dt class="text-ink-light">Notes</dt><dd class="text-ink whitespace-pre-line">{{ work.completion_notes|default:"No notes." }}</dd></div>
+    </dl>
+
+    <section class="mt-4 p-5 card" aria-labelledby="photos-heading">
+        <h2 id="photos-heading" class="ui-section-title text-base font-semibold text-ink mb-3">Photo Evidence</h2>
+        {% with photos=work.work_completion_images.all %}
+        {% if photos %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {% for p in photos %}{% if p.evidence_photo %}
+            <a href="{{ p.evidence_photo.url }}" target="_blank" rel="noopener" class="block aspect-square rounded-xl overflow-hidden bg-surface-container">
+                <img src="{{ p.evidence_photo.url }}" alt="Evidence photo {{ forloop.counter }} for {{ work.schedule.site.name }}" class="w-full h-full object-cover" loading="lazy">
+            </a>
+            {% endif %}{% endfor %}
+        </div>
+        {% else %}
+        <p class="ui-empty ui-empty-sm text-sm text-ink-light">No photos were uploaded.</p>
+        {% endif %}
+        {% endwith %}
+    </section>
+</div>
+{% endblock %}

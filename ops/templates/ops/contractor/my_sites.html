@@ -1,0 +1,44 @@
+{% extends 'ops/layouts/app.html' %}
+
+{% block title %}Sites - SubSync{% endblock %}
+
+{% block page %}
+<div class="ui-page-header">
+    <div>
+        <h1 class="ui-title">Sites</h1>
+        <p class="ui-subtitle">The sites you're assigned to clean ({{ sites|length }}).</p>
+    </div>
+    <a href="{% url 'ops:my_jobs' %}" class="ui-btn ui-btn-secondary self-start sm:self-auto">
+        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>View services
+    </a>
+</div>
+
+{% if sites %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    {% for site in sites %}
+    <article class="card p-5 flex gap-4 min-w-0">
+        {% include 'ops/partials/_site_thumb.html' %}
+        <div class="min-w-0 flex-1">
+            <h2 class="ui-section-title break-words"><a href="{% url 'ops:my_site_detail' site.id %}" class="hover:text-primary hover:underline">{{ site.name }}</a></h2>
+            <p class="text-sm text-ink-light break-words">{{ site.address }}</p>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-light">
+                <span class="px-2 py-0.5 rounded-md bg-surface-container text-ink font-medium">{{ site.cleaning_frequency|capfirst }}</span>
+                <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;" aria-hidden="true">event</span>{{ site.upcoming_count }} upcoming service{{ site.upcoming_count|pluralize }}{% if site.next_service %} · next {{ site.next_service|date:"D j M" }}{% endif %}</span>
+            </div>
+            {% if site.cleaning_instructions %}
+            <div class="mt-4 pt-4 border-t border-surface-container-high">
+                <p class="ui-field-label mb-1">Cleaning instructions</p>
+                <p class="text-sm text-ink whitespace-pre-line break-words">{{ site.cleaning_instructions }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card ui-empty">
+    <span class="material-symbols-outlined" aria-hidden="true">location_off</span>
+    No sites are assigned to you yet.
+</div>
+{% endif %}
+{% endblock %}

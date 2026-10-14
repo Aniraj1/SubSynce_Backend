@@ -1,0 +1,107 @@
+{% load static ops_extras %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ invoice.invoice_number }} - SubSync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Always a white A4 sheet, whatever theme the app is in. */
+        @page { size: A4; margin: 16mm; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #E4DFD9; color: #222221; font-family: 'Poppins', system-ui, sans-serif; font-size: 13px; color-scheme: light; }
+        .toolbar { display: flex; justify-content: center; gap: 8px; padding: 16px; }
+        .toolbar button, .toolbar a { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px solid #D8D3CB; background: #fff; color: #222221; cursor: pointer; text-decoration: none; }
+        .toolbar button { background: #222221; color: #fff; border-color: #222221; }
+        .sheet { width: 210mm; min-height: 297mm; margin: 0 auto 24px; background: #fff; padding: 18mm 16mm; box-shadow: 0 4px 24px rgb(0 0 0 / 0.08); }
+        header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+        header img { height: 40px; max-width: 200px; object-fit: contain; }
+        h1 { margin: 0; font-size: 28px; letter-spacing: 0.02em; text-align: right; }
+        .muted { color: #5C5952; }
+        .meta { margin-top: 6px; text-align: right; line-height: 1.6; }
+        .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 28px 0; line-height: 1.6; }
+        .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #5C5952; margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+        th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #5C5952; border-bottom: 2px solid #222221; padding: 8px 6px; }
+        td { padding: 10px 6px; border-bottom: 1px solid #E4DFD9; }
+        .num { text-align: right; }
+        .totals { margin-left: auto; width: 45%; margin-top: 12px; }
+        .totals td { border: 0; padding: 6px; }
+        .totals .grand td { border-top: 2px solid #222221; font-size: 16px; font-weight: 700; }
+        .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; line-height: 1.6; white-space: pre-line; }
+        .status { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F5F3F1; }
+        footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #E4DFD9; font-size: 11px; color: #5C5952; text-align: center; }
+        @media print {
+            body { background: #fff; }
+            .toolbar { display: none; }
+            .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="{% url 'ops:invoice_detail' invoice.pk %}">Back</a>
+        <button type="button" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    <main class="sheet">
+        <header>
+            <div>
+                {% if company.logo %}<img src="{{ company.logo.url }}" alt="{{ company.name }} logo">{% else %}<img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync">{% endif %}
+                <div class="muted" style="margin-top: 10px; line-height: 1.6;">
+                    {{ company.name }}{% if company.abn %}<br>ABN {{ company.abn }}{% endif %}
+                    {% if company.address %}<br>{{ company.address }}{% endif %}
+                    {% if company.phone %}<br>{{ company.phone }}{% endif %}{% if company.email %}<br>{{ company.email }}{% endif %}
+                </div>
+            </div>
+            <div>
+                <h1>{% if invoice.gst %}TAX INVOICE{% else %}INVOICE{% endif %}</h1>
+                <div class="meta">
+                    <strong>{{ invoice.invoice_number }}</strong><br>
+                    <span class="muted">Date</span> {{ invoice.invoice_date|date:"j M Y" }}<br>
+                    <span class="status">{{ invoice.status|label }}</span>
+                </div>
+            </div>
+        </header>
+
+        <section class="parties">
+            <div>
+                <div class="label">From (contractor)</div>
+                <strong>{{ invoice.created_by.user_detail.first_name|default:invoice.created_by.username }} {{ invoice.created_by.user_detail.last_name|default:"" }}</strong><br>
+                {% if invoice.created_by.email %}{{ invoice.created_by.email }}<br>{% endif %}
+                {% if invoice.created_by.user_detail.phone %}{{ invoice.created_by.user_detail.phone }}{% endif %}
+            </div>
+            <div>
+                <div class="label">Service</div>
+                <strong>{{ invoice.site.name }}</strong><br>
+                {{ invoice.site.address }}<br>
+                <span class="muted">Period</span> {{ invoice.service_period_start|date:"j M Y" }} – {{ invoice.service_period_end|date:"j M Y" }}
+            </div>
+        </section>
+
+        <table>
+            <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+            <tbody>
+                {% for item in items %}
+                <tr><td>{{ item.description }}</td><td class="num">{{ item.quantity.normalize }}</td><td class="num">{{ item.unit_price|money }}</td><td class="num">{{ item.total|money }}</td></tr>
+                {% empty %}
+                <tr><td>Cleaning services</td><td class="num">1</td><td class="num">{{ invoice.amount|money }}</td><td class="num">{{ invoice.amount|money }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <table class="totals">
+            {% if totals.gst is not None %}
+            <tr><td>Subtotal (ex GST)</td><td class="num">{{ totals.subtotal|money }}</td></tr>
+            <tr><td>GST (10%)</td><td class="num">{{ totals.gst|money }}</td></tr>
+            {% endif %}
+            <tr class="grand"><td>Total (AUD){% if totals.gst is not None %} incl. GST{% endif %}</td><td class="num">{{ totals.total|money }}</td></tr>
+        </table>
+
+        <section class="notes">
+            <div><div class="label">Notes</div>{{ extra.notes|default:invoice.remarks|default:"—" }}</div>
+            <div><div class="label">Payment terms</div>{{ extra.terms|default:company.default_terms|default:"—" }}</div>
+        </section>
+
+        <footer>Generated by SubSync · {{ invoice.invoice_number }}</footer>
+    </main>
+</body>
+</html>

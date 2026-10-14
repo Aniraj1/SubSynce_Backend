@@ -1,0 +1,9 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="flex items-center justify-between px-5 py-3 border-t border-surface-container text-sm" aria-label="Pagination">
+    <span class="text-ink-light">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+        {% if page_obj.has_previous %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="ui-btn ui-btn-secondary ui-btn-sm px-3 py-1.5 rounded-lg border border-surface-container-high hover:bg-surface-container">Previous</a>{% endif %}
+        {% if page_obj.has_next %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="ui-btn ui-btn-secondary ui-btn-sm px-3 py-1.5 rounded-lg border border-surface-container-high hover:bg-surface-container">Next</a>{% endif %}
+    </div>
+</nav>
+{% endif %}

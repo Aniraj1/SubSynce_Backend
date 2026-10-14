@@ -1,0 +1,2 @@
+{# data-* attributes for a button that opens the Edit Client modal via openClientModal(this.dataset). Needs `client`. #}
+data-id="{{ client.id }}" data-first-name="{{ client.first_name }}" data-last-name="{{ client.last_name|default:'' }}" data-phone="{{ client.phone|default:'' }}" data-email="{{ client.email|default:'' }}" data-role="{{ client.role }}" data-status="{{ client.status }}" data-sites="{% for s in client.assigned_sites.all %}{{ s.id }}{% if not forloop.last %},{% endif %}{% endfor %}"

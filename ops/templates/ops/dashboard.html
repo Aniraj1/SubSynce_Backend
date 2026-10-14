@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static ops_extras %}
+
+{% block title %}Dashboard - SubSync{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+    {% include 'ops/partials/_sidebar.html' with active='dashboard' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        {% include 'ops/partials/_topbar.html' %}
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto bg-surface">
+            <div class="w-full px-4 lg:px-14 py-6 lg:py-8">
+
+                <!-- Page Header -->
+                <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-ink">Dashboard</h1>
+                        <p class="text-ink-light text-sm mt-1">{{ today|date:"jS F Y" }}</p>
+                    </div>
+                    <!-- Staff create client invoices (contractor invoices are created by contractors) -->
+                    <a href="{% url 'ops:client_invoice_create' %}"
+                       class="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                        New Invoice
+                    </a>
+                </div>
+                {% if range_error %}
+                <p class="mb-4 px-4 py-3 rounded-xl bg-error/10 text-error text-sm" role="alert">{{ range_error }}</p>
+                {% endif %}
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                    <!-- Clients -->
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:clients' %}" aria-label="View clients" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-ink-light">Clients</p>
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 20px;">groups</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-ink">{{ stats.clients }}</p>
+                            <p class="text-xs text-success flex items-center gap-1 mt-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                Total clients
+                            </p>
+                        </div>
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}</a>{% else %}</div>{% endif %}
+
+                    <!-- Sites -->
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:sites' %}" aria-label="View sites" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-ink-light">Sites</p>
+                            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-warning" style="font-size: 20px;">public</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-ink">{{ stats.sites }}</p>
+                            <p class="text-xs text-success flex items-center gap-1 mt-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                Active sites
+                            </p>
+                        </div>
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}</a>{% else %}</div>{% endif %}
+
+                    <!-- Contractors -->
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View contractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-ink-light">Contractors</p>
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" style="font-size: 20px;">engineering</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-ink">{{ stats.contractors }}</p>
+                            <p class="text-xs text-success flex items-center gap-1 mt-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
+                                Active contractors
+                            </p>
+                        </div>
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}</a>{% else %}</div>{% endif %}
+
+                    <!-- Jobs this week -->
+                    <div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-ink-light">Jobs this week</p>
+                            <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-success" style="font-size: 20px;">task_alt</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <p class="flex items-center gap-1.5 text-xs text-ink-light">
+                                    <span class="w-2 h-2 rounded-full bg-success inline-block"></span>
+                                    Completed <span class="font-semibold text-ink">{{ jobs_this_week.completed }}</span>
+                                </p>
+                                <p class="flex items-center gap-1.5 text-xs text-ink-light">
+                                    <span class="w-2 h-2 rounded-full bg-surface-container-high inline-block"></span>
+                                    Scheduled <span class="font-semibold text-ink">{{ jobs_this_week.scheduled }}</span>
+                                </p>
+                            </div>
+                            <div class="relative w-14 h-14 rounded-full shrink-0"
+                                 style="background: conic-gradient(#F4842B {{ jobs_this_week.progress_pct }}%, var(--ring-track) 0);">
+                                <div class="absolute inset-[3px] rounded-full bg-white flex flex-col items-center justify-center">
+                                    <span class="text-[10px] font-semibold text-ink leading-none">{{ jobs_this_week.completed }}/{{ jobs_this_week.scheduled }}</span>
+                                    <span class="text-[10px] text-ink-light leading-none mt-0.5">Total</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main two-column area -->
+                <div class="flex flex-col xl:flex-row gap-4 items-start">
+
+                    <!-- Left: Upcoming services -->
+                    <div class="w-full xl:flex-1 bg-white rounded-2xl border border-surface-container shadow-sm p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary" style="font-size: 16px;">event_available</span>
+                                </div>
+                                <h2 class="text-sm font-semibold text-ink">Upcoming services</h2>
+                            </div>
+                            <a href="{% url 'ops:schedules' %}"
+                               class="text-xs font-medium text-ink-light hover:text-primary transition-colors">View all</a>
+                        </div>
+
+                        <div class="divide-y divide-surface-container">
+                            {% for service in upcoming_services %}
+                            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-3 gap-y-1 py-3">
+                                <div class="min-w-0 basis-full sm:basis-auto sm:flex-1">
+                                    <p class="text-sm font-medium text-ink truncate">{{ service.site_name }}</p>
+                                    <p class="text-xs text-ink-light truncate">{{ service.client_name }}</p>
+                                </div>
+                                <div class="text-xs text-ink-light whitespace-nowrap">{{ service.date|date:"D d M" }} • {{ service.time|time:"g:i A" }}</div>
+                                <div class="text-xs text-ink whitespace-nowrap">{{ service.contractor|default:"—" }}</div>
+                                <span class="shrink-0 px-2.5 py-1 rounded-full bg-surface-container text-xs font-medium text-ink-light">{{ service.status|title }}</span>
+                            </div>
+                            {% empty %}
+                            <p class="text-sm text-ink-light py-8 text-center">No upcoming services.</p>
+                            {% endfor %}
+                        </div>
+
+                        <a href="{% url 'ops:schedules' %}"
+                           class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-3">
+                            View all schedule
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <!-- Right column -->
+                    <div class="w-full xl:w-[360px] shrink-0 flex flex-col gap-4">
+
+                        <!-- Invoices -->
+                        <div class="bg-white rounded-2xl border border-surface-container shadow-sm p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary" style="font-size: 16px;">receipt_long</span>
+                                    </div>
+                                    <h2 class="text-sm font-semibold text-ink">Invoices</h2>
+                                </div>
+                                <a href="{% url 'ops:invoices' %}"
+                                   class="text-xs font-medium text-ink-light hover:text-primary transition-colors">View all</a>
+                            </div>
+                            <div class="flex items-center justify-between text-sm py-1.5">
+                                <span class="text-ink-light">Pending</span>
+                                <span class="font-semibold text-ink">{{ invoices_summary.pending }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm py-1.5">
+                                <span class="text-ink-light">Flagged</span>
+                                <span class="font-semibold text-ink">{{ invoices_summary.flagged }}</span>
+                            </div>
+                            {% if invoices_summary.recent %}
+                            <div class="flex items-center justify-between text-xs text-ink-light border-t border-surface-container mt-2 pt-2">
+                                <span>{{ invoices_summary.recent.invoice_number }} • {{ invoices_summary.recent.site.name }}</span>
+                                <span class="font-medium text-ink tabular-nums">{{ invoices_summary.recent.amount|money }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- This month -->
+                        <div class="bg-white rounded-2xl border border-surface-container shadow-sm p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary" style="font-size: 16px;">insights</span>
+                                </div>
+                                <h2 class="text-sm font-semibold text-ink">This month</h2>
+                            </div>
+                            <div class="flex items-center justify-between text-sm py-1">
+                                <span class="text-ink-light">Revenue</span>
+                                <span class="font-medium text-ink tabular-nums">{{ month_financials.revenue|money }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm py-1">
+                                <span class="text-ink-light">Cost</span>
+                                <span class="font-medium text-ink tabular-nums">{{ month_financials.cost|money }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm py-1">
+                                <span class="text-ink-light">{% if month_financials.profit < 0 %}Loss{% else %}Profit{% endif %}</span>
+                                <span class="font-semibold tabular-nums {% if month_financials.profit < 0 %}text-error{% else %}text-success{% endif %}">{{ month_financials.profit|money }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-ink-light mt-2 mb-1">
+                                <span>Profit margin</span>
+                                <span class="tabular-nums {% if month_financials.margin < 0 %}text-error{% endif %}">{{ month_financials.margin }}%</span>
+                            </div>
+                            <div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
+                                <div class="h-full rounded-full {% if month_financials.margin < 0 %}bg-error{% else %}bg-success{% endif %}" style="width: {{ month_financials.margin_bar }}%;"></div>
+                            </div>
+                            <a href="{% url 'ops:profitability' %}"
+                               class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-3">
+                                View profitability report
+                                <span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}{{ job.site.name }} · {{ job.scheduled_date|date:"j M" }} - SubSync{% endblock %}
+
+{% block page %}
+<nav class="flex flex-wrap items-center gap-1.5 text-xs text-ink-light mb-3" aria-label="Breadcrumb">
+    <a href="{% url 'ops:my_jobs' %}" class="hover:text-primary">Services</a>
+    <span class="material-symbols-outlined" style="font-size: 14px;" aria-hidden="true">chevron_right</span>
+    <span class="text-ink">{{ job.site.name }} · {{ job.scheduled_date|date:"j M Y" }}</span>
+</nav>
+<div class="ui-page-header">
+    <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-3">
+            <h1 class="ui-title break-words">{{ job.site.name }}</h1>
+            <span class="pill pill-{{ status|lower }}">{{ status|label }}</span>
+            {% if overdue %}<span class="text-xs font-medium text-error">Overdue</span>{% endif %}
+        </div>
+        <p class="ui-subtitle">{{ job.scheduled_date|date:"l j F Y" }} at {{ job.scheduled_time|time:"g:i A" }}</p>
+    </div>
+    <a href="{% url 'ops:my_site_detail' job.site_id %}" class="ui-btn ui-btn-secondary self-start sm:self-auto">
+        <span class="material-symbols-outlined" aria-hidden="true">location_on</span>View site
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <!-- What and where -->
+    <section class="card p-5 lg:col-span-2" aria-labelledby="details-heading">
+        <h2 id="details-heading" class="ui-section-title mb-4">Service details</h2>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <div><dt class="text-ink-light text-xs">Date</dt><dd class="mt-1 font-medium text-ink">{{ job.scheduled_date|date:"D j M Y" }}</dd></div>
+            <div><dt class="text-ink-light text-xs">Time</dt><dd class="mt-1 font-medium text-ink tabular-nums">{{ job.scheduled_time|time:"g:i A" }}</dd></div>
+            <div><dt class="text-ink-light text-xs">Client</dt><dd class="mt-1 font-medium text-ink">{{ job.site.client_id.first_name }} {{ job.site.client_id.last_name|default:'' }}</dd></div>
+            <div><dt class="text-ink-light text-xs">Frequency</dt><dd class="mt-1 font-medium text-ink">{{ job.site.cleaning_frequency|lower|capfirst }}</dd></div>
+            <div class="sm:col-span-2">
+                <dt class="text-ink-light text-xs">Address</dt>
+                <dd class="mt-1 font-medium text-ink break-words">{{ job.site.address }}
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ job.site.address|urlencode }}" target="_blank" rel="noopener" class="ml-2 text-xs font-normal text-primary hover:underline">Open in Maps</a>
+                </dd>
+            </div>
+            <div class="sm:col-span-2"><dt class="text-ink-light text-xs">Notes from the office</dt><dd class="mt-1 text-ink whitespace-pre-line break-words">{{ job.notes|default:"No notes for this service." }}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-ink-light text-xs">Cleaning instructions</dt><dd class="mt-1 text-ink whitespace-pre-line break-words">{{ job.site.cleaning_instructions|default:"No instructions added." }}</dd></div>
+        </dl>
+    </section>
+
+    <!-- Your work record -->
+    <section class="card p-5" aria-labelledby="work-heading">
+        <h2 id="work-heading" class="ui-section-title mb-4">Your work record</h2>
+        {% if work %}
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-3"><dt class="text-ink-light">Check-in</dt><dd class="font-medium text-ink tabular-nums">{{ work.check_in_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+            <div class="flex justify-between gap-3"><dt class="text-ink-light">Check-out</dt><dd class="font-medium text-ink tabular-nums">{{ work.check_out_time|date:"j M, g:i A"|default:"—" }}</dd></div>
+            <div class="flex justify-between gap-3"><dt class="text-ink-light">Time on site</dt><dd class="font-medium text-ink">{% if duration %}{{ duration }}{% else %}—{% endif %}</dd></div>
+        </dl>
+        {% if work.completion_notes %}<p class="mt-4 pt-4 border-t border-surface-container-high text-sm text-ink whitespace-pre-line break-words">{{ work.completion_notes }}</p>{% endif %}
+        <a href="{% url 'ops:work_detail' work.id %}" class="mt-4 inline-block text-sm font-medium text-primary hover:underline">Open full record</a>
+        {% else %}
+        <div class="ui-empty !py-6"><span class="material-symbols-outlined" aria-hidden="true">pending_actions</span>No work recorded for this service yet.</div>
+        {% endif %}
+    </section>
+</div>
+
+<!-- Photos: work evidence first, then the site's own photos for reference -->
+{% with evidence=work.work_completion_images.all %}
+{% if evidence %}
+<section class="card p-5 mb-4" aria-labelledby="evidence-heading">
+    <h2 id="evidence-heading" class="ui-section-title mb-4">Your work photos</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {% for p in evidence %}
+        <a href="{{ p.evidence_photo.url }}" target="_blank" rel="noopener" class="block aspect-[4/3] rounded-xl overflow-hidden border border-surface-container-high bg-surface-container hover:opacity-90 transition-opacity">
+            <img src="{{ p.evidence_photo.url }}" alt="Work photo {{ forloop.counter }}" loading="lazy" class="w-full h-full object-cover">
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endwith %}
+
+{% if site.images.all %}
+<section class="card p-5" aria-labelledby="site-photos-heading">
+    <h2 id="site-photos-heading" class="ui-section-title mb-4">Site photos</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {% for img in site.images.all %}
+        <a href="{{ img.image.url }}" target="_blank" rel="noopener" class="block aspect-[4/3] rounded-xl overflow-hidden border border-surface-container-high bg-surface-container hover:opacity-90 transition-opacity">
+            <img src="{{ img.image.url }}" alt="{{ site.name }} photo {{ forloop.counter }}" loading="lazy" class="w-full h-full object-cover">
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

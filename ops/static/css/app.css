@@ -1,0 +1,399 @@
+/* SubSync custom styles (Tailwind Play CDN covers utility classes; this file
+   holds the handful of things utilities can't reach). */
+
+/* Theme tokens: SubSync palette v2 ("L.Point-inspired").
+   Colour vars are space-separated RGB so Tailwind's /<alpha> modifiers work;
+   alpha tokens (borders, hairlines, shadows) are full colour values. */
+:root {
+    --c-surface: 245 243 241;            /* #F5F3F1 page background */
+    --c-surface-lowest: 255 255 255;     /* #FFFFFF cards */
+    --c-surface-low: 250 249 247;        /* #FAF9F7 sidenav */
+    --c-surface-c: 240 237 232;          /* #F0EDE8 list items, inputs */
+    --c-surface-high: 234 230 224;       /* #EAE6E0 stronger items */
+    --c-surface-highest: 228 223 217;    /* #E4DFD9 greige accent */
+    --c-ink: 34 34 33;                   /* #222221 on-surface */
+    --c-text-2: 61 59 55;                /* #3D3B37 */
+    --c-ink-light: 92 89 82;             /* #5C5952 on-surface-variant */
+    --c-outline: 138 134 126;            /* #8A867E */
+    --c-primary: 244 132 43;             /* #F4842B orange */
+    --c-primary-strong: 217 108 16;      /* #D96C10 hover */
+    --c-on-accent: 255 255 255;          /* text on orange/green/red buttons */
+    --c-secondary-container: 253 227 205;/* #FDE3CD */
+    --c-on-secondary-container: 138 74 16; /* #8A4A10 */
+    --c-error: 198 58 47;                /* #C63A2F */
+    --c-success: 14 138 95;              /* #0E8A5F emerald */
+    --c-warning: 180 83 9;               /* #B45309 amber */
+    --c-scheduled: 37 99 235;            /* #2563EB */
+    --c-completed: 14 138 95;            /* #0E8A5F */
+    --c-missed: 217 119 6;               /* #D97706 */
+    --c-violet: 124 58 237;              /* #7C3AED */
+    --outline-variant: #D8D3CB;
+    --card-border: rgba(34, 34, 33, 0.09);
+    --hairline: rgba(34, 34, 33, 0.07);
+    --input-border: rgba(34, 34, 33, 0.16);
+    --glow: rgba(244, 132, 43, 0.35);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 16px 20px rgba(0, 0, 0, 0.04);
+    color-scheme: light;
+}
+
+html.dark {
+    --c-surface: 27 27 26;               /* #1B1B1A */
+    --c-surface-lowest: 23 23 22;        /* #171716 */
+    --c-surface-low: 31 31 30;           /* #1F1F1E */
+    --c-surface-c: 36 36 34;             /* #242422 */
+    --c-surface-high: 41 41 39;          /* #292927 */
+    --c-surface-highest: 46 46 43;       /* #2E2E2B */
+    --c-ink: 245 243 241;                /* #F5F3F1 */
+    --c-text-2: 217 214 208;             /* #D9D6D0 */
+    --c-ink-light: 168 164 157;          /* #A8A49D */
+    --c-outline: 120 116 110;            /* #78746E */
+    --c-primary: 255 154 71;             /* #FF9A47 */
+    --c-primary-strong: 255 175 110;     /* #FFAF6E */
+    --c-on-accent: 27 27 26;             /* dark text on the brighter dark-mode accents */
+    --c-secondary-container: 61 45 32;   /* #FF9A47 @16% over #1B1B1A */
+    --c-on-secondary-container: 255 184 126; /* #FFB87E */
+    --c-error: 248 113 113;              /* #F87171 */
+    --c-success: 52 211 153;             /* #34D399 */
+    --c-warning: 251 191 36;             /* #FBBF24 */
+    --c-scheduled: 96 165 250;           /* #60A5FA */
+    --c-completed: 52 211 153;           /* #34D399 */
+    --c-missed: 251 191 36;              /* #FBBF24 */
+    --c-violet: 167 139 250;             /* #A78BFA */
+    --outline-variant: rgba(245, 243, 241, 0.14);
+    --card-border: rgba(245, 243, 241, 0.10);
+    --hairline: rgba(245, 243, 241, 0.07);
+    --input-border: rgba(245, 243, 241, 0.16);
+    --glow: rgba(255, 154, 71, 0.40);
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 20px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+}
+
+body {
+    transition: background-color 300ms ease-out, color 300ms ease-out;
+}
+
+/* Card: the base surface for app screens */
+.card {
+    background-color: rgb(var(--c-surface-lowest));
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+}
+
+/* Dividers and hairlines use the palette's alpha tokens */
+.divide-surface-container > :not([hidden]) ~ :not([hidden]) { border-color: var(--hairline) !important; }
+.border-surface-container-high { border-color: var(--outline-variant) !important; }
+
+/* Older screens use bg-white for cards; keep them readable in dark mode. */
+html.dark .bg-white {
+    background-color: rgb(var(--c-surface-lowest));
+}
+
+/* ---------------------------------------------------------------------------
+ * Dark mode for the SubSync page designs (Clients, Sites, Schedules, Users,
+ * Contractors, Dashboard, portal…). Those templates use the Figma hex
+ * colours as Tailwind arbitrary values, which don't follow the theme. In dark
+ * mode only, map each one onto the palette tokens the Calendar uses, so light
+ * mode stays exactly as designed and no page needs its own dark styles.
+ * ------------------------------------------------------------------------- */
+:root { --ring-track: #ECE6DE; }
+html.dark { --ring-track: rgb(var(--c-surface-high)); }
+
+/* Text */
+html.dark .text-\[\#222222\], html.dark .text-\[\#202224\], html.dark .text-black,
+html.dark .hover\:text-\[\#222222\]:hover { color: rgb(var(--c-ink)); }
+html.dark .text-\[\#494949\], html.dark .text-\[\#888\] { color: rgb(var(--c-ink-light)); }
+html.dark .text-\[\#494949\]\/60 { color: rgb(var(--c-ink-light) / 0.6); }
+html.dark .text-\[\#494949\]\/50 { color: rgb(var(--c-ink-light) / 0.5); }
+html.dark .text-\[\#494949\]\/40 { color: rgb(var(--c-ink-light) / 0.4); }
+html.dark .placeholder\:text-\[\#494949\]\/60::placeholder { color: rgb(var(--c-ink-light) / 0.7); }
+html.dark .placeholder\:text-\[\#494949\]\/50::placeholder { color: rgb(var(--c-ink-light) / 0.6); }
+html.dark .text-\[\#F27E22\] { color: rgb(var(--c-primary)); }
+html.dark .text-\[\#F27E22\]\/40 { color: rgb(var(--c-primary) / 0.4); }
+html.dark .text-\[\#4A90E2\], html.dark .text-\[\#3B5BDB\] { color: rgb(var(--c-scheduled)); }
+html.dark .text-\[\#34C27A\] { color: rgb(var(--c-success)); }
+html.dark .text-\[\#7C6AE8\], html.dark .text-\[\#6E62E5\] { color: rgb(var(--c-violet)); }
+html.dark .text-\[\#E0A800\] { color: rgb(var(--c-warning)); }
+html.dark .text-\[\#FF383C\], html.dark .text-\[\#EF4444\] { color: rgb(var(--c-error)); }
+
+/* Borders and dividers */
+html.dark .border-\[\#E2E2E2\], html.dark .border-\[\#5B5A77\]\/20, html.dark .border-\[\#5B5A77\]\/10,
+html.dark .border-\[\#494949\]\/30, html.dark .border-\[\#494949\]\/25, html.dark .border-\[\#494949\]\/20,
+html.dark .border-\[\#ADADAD\]\/50, html.dark .border-\[\#E9E2DC\], html.dark .border-\[\#F0E6DD\] { border-color: var(--outline-variant); }
+html.dark .border-\[\#E9E9E9\], html.dark .divide-\[\#E9E9E9\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--hairline); }
+html.dark .border-\[\#FF383C\], html.dark .border-\[\#EF4444\] { border-color: rgb(var(--c-error)); }
+html.dark .border-\[\#FF383C\]\/30 { border-color: rgb(var(--c-error) / 0.4); }
+html.dark .bg-\[\#5B5A77\]\/20 { background-color: var(--outline-variant); }
+
+/* Neutral surfaces (table headers, neutral pills, hovers) */
+html.dark .bg-\[\#F3F3F3\], html.dark .hover\:bg-\[\#F3F3F3\]:hover, html.dark .hover\:bg-white:hover { background-color: rgb(var(--c-surface-c)); }
+html.dark .bg-\[\#494949\]\/\[0\.02\] { background-color: rgb(var(--c-ink) / 0.03); }
+
+/* Pale accent tints -> the same translucent tints the status pills use */
+html.dark .bg-\[\#FAF2E8\], html.dark .bg-\[\#FDEEE4\], html.dark .bg-\[\#F5EEE6\], html.dark .bg-\[\#F5EEE0\],
+html.dark .bg-\[\#F27E22\]\/10 { background-color: rgb(var(--c-primary) / 0.14); }
+html.dark .hover\:bg-\[\#FAF2E8\]:hover, html.dark .hover\:bg-\[\#FAF2E8\]\/60:hover { background-color: rgb(var(--c-primary) / 0.10); }
+html.dark .bg-\[\#E3F0FF\] { background-color: rgb(var(--c-scheduled) / 0.14); }
+html.dark .bg-\[\#E3F8EC\] { background-color: rgb(var(--c-success) / 0.14); }
+html.dark .bg-\[\#EEEAFD\], html.dark .bg-\[\#ECEAFD\] { background-color: rgb(var(--c-violet) / 0.16); }
+html.dark .bg-\[\#FFF6DB\] { background-color: rgb(var(--c-warning) / 0.14); }
+html.dark .bg-\[\#FF383C\]\/5, html.dark .hover\:bg-\[\#EF4444\]\/5:hover { background-color: rgb(var(--c-error) / 0.10); }
+
+/* Clients / Contractors use an orange table header in light mode; dark mode gets the standard dark header. */
+html.dark thead tr.bg-primary { background-color: rgb(var(--c-surface-c)); color: rgb(var(--c-ink-light)); }
+
+:focus-visible {
+    outline: 2px solid rgb(var(--c-primary));
+    outline-offset: 2px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgb(var(--c-ink));
+    -webkit-box-shadow: 0 0 0px 1000px rgb(var(--c-surface-lowest)) inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+input[type="checkbox"] {
+    accent-color: rgb(var(--c-primary));
+}
+
+/* "Sign in as" role toggle: plain radios styled as pill buttons */
+.role-toggle input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.role-toggle label {
+    cursor: pointer;
+}
+
+/* Shared form controls for the app screens */
+.field-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--input-border);
+    background-color: rgb(var(--c-surface-lowest));
+    color: rgb(var(--c-ink));
+    padding: 0.625rem 0.875rem;
+    font-size: 16px;
+}
+
+@media (min-width: 768px) {
+    .field-input { font-size: 0.875rem; }
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: rgb(var(--c-primary));
+    box-shadow: 0 0 0 3px var(--glow);
+}
+
+/* Status pills */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    padding: 0.125rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.pill::before {
+    content: "";
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background-color: currentColor;
+}
+.pill-scheduled, .pill-issued { background: rgb(var(--c-scheduled) / 0.12); color: rgb(var(--c-scheduled)); }
+.pill-in_progress, .pill-pending { background: rgb(var(--c-warning) / 0.12); color: rgb(var(--c-warning)); }
+.pill-completed, .pill-approved, .pill-paid, .pill-active { background: rgb(var(--c-success) / 0.12); color: rgb(var(--c-success)); }
+.pill-missed { background: rgb(var(--c-missed) / 0.14); color: rgb(var(--c-missed)); }
+.pill-rejected, .pill-overdue, .pill-flagged { background: rgb(var(--c-error) / 0.09); color: rgb(var(--c-error)); }
+.pill-cancelled, .pill-inactive { background: rgb(var(--c-surface-high)); color: rgb(var(--c-ink-light)); }
+
+/* Calendar chips: no dot, so the site name gets the room */
+.pill.chip { display: flex; min-width: 0; }
+.pill.chip::before { display: none; }
+
+/* ---------------------------------------------------------------------------
+ * Contractor portal design system (from the approved User Management Figma).
+ * Everything below is scoped to <body data-ui="contractor">, so staff pages are
+ * untouched; the ui-* classes are inert anywhere else. Figma values are
+ * translated to tokens (no fixed frame widths): 256px sidebar, 40px nav rows,
+ * 8px controls, 16px cards, 24/600 titles, 12px table labels.
+ * ------------------------------------------------------------------------- */
+[data-ui="contractor"] {
+    --ui-control-radius: 0.5rem;                       /* 8px buttons, inputs, nav rows */
+    --ui-card-radius: 1rem;                            /* 16px cards and tables */
+    --ui-card-shadow: 0 1px 2px rgba(34, 34, 33, 0.04);
+    --ui-nav-active: 250 242 232;                      /* #FAF2E8 pale orange */
+    --ui-gutter: 16px;
+}
+html.dark [data-ui="contractor"] {
+    --ui-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --ui-nav-active: var(--c-secondary-container);
+}
+@media (min-width: 768px)  { [data-ui="contractor"] { --ui-gutter: 32px; } }
+@media (min-width: 1280px) { [data-ui="contractor"] { --ui-gutter: 48px; } }
+@media (min-width: 1536px) { [data-ui="contractor"] { --ui-gutter: 56px; } }
+
+/* Page container and header */
+[data-ui="contractor"] .ui-page { width: 100%; max-width: 1600px; margin: 0 auto; padding: 24px var(--ui-gutter) 48px; }
+@media (min-width: 1280px) { [data-ui="contractor"] .ui-page { padding-top: 32px; } }
+[data-ui="contractor"] .ui-page-header { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+@media (min-width: 640px) {
+    [data-ui="contractor"] .ui-page-header { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+}
+[data-ui="contractor"] .ui-title { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; color: rgb(var(--c-ink)); }
+[data-ui="contractor"] .ui-subtitle { margin-top: 4px; font-size: 14px; line-height: 20px; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-section-title { font-size: 16px; line-height: 24px; font-weight: 600; color: rgb(var(--c-ink)); }
+[data-ui="contractor"] .ui-back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 16px; font-size: 14px; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-back:hover { color: rgb(var(--c-ink)); }
+
+/* Cards: 16px radius, subtle border, restrained shadow */
+[data-ui="contractor"] .card { border-radius: var(--ui-card-radius); box-shadow: var(--ui-card-shadow); }
+[data-ui="contractor"] .ui-card-link { transition: border-color 150ms, box-shadow 150ms; }
+[data-ui="contractor"] .ui-card-link:hover { border-color: rgb(var(--c-primary) / 0.35); box-shadow: 0 4px 14px rgba(34, 34, 33, 0.06); }
+html.dark [data-ui="contractor"] .ui-card-link:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); }
+[data-ui="contractor"] .ui-card-icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+[data-ui="contractor"] .ui-metric-label { font-size: 12px; line-height: 16px; font-weight: 500; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-metric { margin-top: 8px; font-size: 24px; line-height: 32px; font-weight: 600; color: rgb(var(--c-ink)); font-variant-numeric: tabular-nums; }
+[data-ui="contractor"] .ui-metric-hint { margin-top: 4px; font-size: 12px; line-height: 16px; color: rgb(var(--c-ink-light)); }
+
+/* Buttons: 40px (36px small), 8px radius */
+[data-ui="contractor"] .ui-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 40px; padding: 0 16px; border-radius: var(--ui-control-radius); border: 1px solid transparent;
+    font-size: 14px; line-height: 1; font-weight: 500; white-space: nowrap;
+    transition: background-color 150ms, border-color 150ms, color 150ms;
+}
+[data-ui="contractor"] .ui-btn .material-symbols-outlined { font-size: 18px !important; }
+[data-ui="contractor"] .ui-btn-sm { height: 36px; padding: 0 12px; font-size: 13px; }
+[data-ui="contractor"] .ui-btn-icon { width: 40px; padding: 0; }
+[data-ui="contractor"] .ui-btn-primary { background-color: rgb(var(--c-primary)); color: rgb(var(--c-on-accent)); }
+[data-ui="contractor"] .ui-btn-primary:hover { background-color: rgb(var(--c-primary-strong)); }
+[data-ui="contractor"] .ui-btn-secondary { background-color: rgb(var(--c-surface-lowest)); border-color: var(--outline-variant); color: rgb(var(--c-ink)); }
+[data-ui="contractor"] .ui-btn-secondary:hover { background-color: rgb(var(--c-surface-c)); }
+[data-ui="contractor"] .ui-btn-danger { background-color: transparent; border-color: rgb(var(--c-error) / 0.35); color: rgb(var(--c-error)); }
+[data-ui="contractor"] .ui-btn-danger:hover { background-color: rgb(var(--c-error) / 0.1); }
+[data-ui="contractor"] .ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+[data-ui="contractor"] .ui-btn-secondary:disabled:hover { background-color: rgb(var(--c-surface-lowest)); }
+
+/* Inputs: 40px controls, 44px search, 8px radius, theme surface */
+[data-ui="contractor"] .field-input {
+    min-height: 40px; padding: 8px 12px; border-radius: var(--ui-control-radius);
+    background-color: rgb(var(--c-surface-lowest)); border-color: var(--input-border);
+}
+[data-ui="contractor"] select.field-input,
+[data-ui="contractor"] input.field-input:not([type="file"]) { height: 40px; padding-top: 0; padding-bottom: 0; }
+[data-ui="contractor"] input.field-input.ui-search { height: 44px; }
+[data-ui="contractor"] .field-input::placeholder { color: rgb(var(--c-ink-light) / 0.7); }
+[data-ui="contractor"] .ui-field-label { display: block; font-size: 12px; line-height: 16px; font-weight: 500; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-label { display: block; margin-bottom: 6px; font-size: 14px; line-height: 20px; font-weight: 500; color: rgb(var(--c-ink)); }
+[data-ui="contractor"] .ui-help { font-size: 12px; line-height: 16px; color: rgb(var(--c-ink-light)); }
+/* File pickers: the native button styled as a small secondary button */
+[data-ui="contractor"] .ui-file { display: block; width: 100%; font-size: 13px; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-file::file-selector-button {
+    height: 36px; margin-right: 12px; padding: 0 12px; border-radius: var(--ui-control-radius);
+    border: 1px solid var(--outline-variant); background-color: rgb(var(--c-surface-lowest));
+    color: rgb(var(--c-ink)); font: inherit; font-weight: 500; cursor: pointer;
+}
+[data-ui="contractor"] .ui-file:hover::file-selector-button { background-color: rgb(var(--c-surface-c)); }
+
+/* Detail facts (dl grids): 12px label over a 14px value */
+[data-ui="contractor"] .ui-facts { font-size: 14px; line-height: 20px; }
+[data-ui="contractor"] .ui-facts dt,
+[data-ui="contractor"] .ui-facts .ui-fact-label { margin-bottom: 2px; font-size: 12px; line-height: 16px; font-weight: 500; color: rgb(var(--c-ink-light)); }
+
+/* Tables: light grey header, 12px uppercase labels, balanced rows */
+[data-ui="contractor"] .ui-table { width: 100%; font-size: 14px; }
+/* Narrow screens: tables scroll inside their card instead of squashing columns */
+[data-ui="contractor"] .overflow-x-auto > .ui-table { min-width: 600px; }
+[data-ui="contractor"] .ui-nowrap { white-space: nowrap; }
+[data-ui="contractor"] .ui-table thead th,
+[data-ui="contractor"] .ui-grid-head > * {
+    background-color: rgb(var(--c-surface-c)); height: 44px; padding: 0 20px;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+    color: rgb(var(--c-ink-light)); white-space: nowrap; vertical-align: middle;
+}
+[data-ui="contractor"] .ui-grid-head > * { display: flex; align-items: center; justify-content: center; padding: 0 8px; }
+[data-ui="contractor"] .ui-table tbody td,
+[data-ui="contractor"] .ui-table tfoot td { padding: 14px 20px; vertical-align: middle; }
+
+/* Empty states */
+[data-ui="contractor"] .ui-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 20px; text-align: center; font-size: 14px; color: rgb(var(--c-ink-light)); }
+[data-ui="contractor"] .ui-empty .material-symbols-outlined { font-size: 32px; color: rgb(var(--c-outline)); }
+[data-ui="contractor"] .ui-empty.ui-empty-sm { padding: 24px 16px; }
+
+/* Every role: the sidebar's logo block and the top bar share one fixed 64px height, so their
+   bottom borders line up. Without this each sized itself from its padding and contents
+   (logo block 77px, top bar about 70px) and the two lines sat at different heights. */
+.ui-sidebar-brand { height: 64px; padding-top: 0; padding-bottom: 0; box-sizing: content-box; } /* + 1px border, same as the header */
+.ui-topbar-inner { height: 64px; padding-top: 0; padding-bottom: 0; }
+
+/* Sidebar: 256px, 32px inner gutter, 40px rows, pale orange active item */
+[data-ui="contractor"] .ui-sidebar-brand { height: 64px; padding: 0 32px; }
+[data-ui="contractor"] .ui-sidebar-nav { padding: 16px; }
+[data-ui="contractor"] .ui-nav-item { height: 40px; padding: 0 16px; gap: 10px; border-radius: var(--ui-control-radius); font-size: 15px; font-weight: 400; }
+[data-ui="contractor"] .ui-nav-item .material-symbols-outlined { font-size: 20px; }
+[data-ui="contractor"] .ui-nav-item.bg-primary\/10 { background-color: rgb(var(--ui-nav-active)); font-weight: 500; }
+[data-ui="contractor"] .ui-nav-divider { margin: 12px 0; border-top: 1px solid var(--hairline); }
+
+/* Top bar: 64px, same gutter as the page, 40px icon buttons */
+[data-ui="contractor"] .ui-topbar-inner { height: 64px; padding-top: 0; padding-bottom: 0; padding-left: var(--ui-gutter); padding-right: var(--ui-gutter); }
+[data-ui="contractor"] .ui-icon-btn { width: 40px; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ui-control-radius); }
+/* ui-icon-btn's display would otherwise beat Tailwind's lg:hidden on the drawer button */
+@media (min-width: 1024px) { [data-ui="contractor"] .ui-icon-btn.lg\:hidden { display: none; } }
+[data-ui="contractor"] .ui-account-trigger { border-radius: var(--ui-control-radius); }
+[data-ui="contractor"] .ui-menu { border-radius: 12px; }
+[data-ui="contractor"] .ui-menu-item { min-height: 40px; border-radius: var(--ui-control-radius); }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* Icons are font ligatures: keep each one a fixed 1em square so the icon name
+   never pushes the layout around (or shows as text) before the font arrives. */
+.material-symbols-outlined {
+    display: inline-block;
+    width: 1em;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Dark mode for screens built with fixed hex colours (Clients, Sites, Schedules,
+   Users, the contractor portal, login). Those classes never change with the
+   theme, so map them onto the palette tokens here instead of editing each page. */
+html.dark [class*="text-[#222222]"],
+html.dark [class*="text-[#202224]"] { color: rgb(var(--c-ink)); }
+html.dark [class*="text-[#494949]"] { color: rgb(var(--c-ink-light)); }
+html.dark [class*="border-[#E2E2E2]"],
+html.dark [class*="border-[#E9E9E9]"],
+html.dark [class*="border-[#F0E6DD]"],
+html.dark [class*="border-[#E9E2DC]"],
+html.dark [class*="border-[#ADADAD]"],
+html.dark [class*="border-[#494949]"],
+html.dark [class*="border-[#5B5A77]"] { border-color: var(--outline-variant); }
+html.dark [class*="divide-[#E9E9E9]"] > :not([hidden]) ~ :not([hidden]) { border-color: var(--hairline); }
+html.dark [class*=" bg-[#F3F3F3]"],
+html.dark [class^="bg-[#F3F3F3]"],
+html.dark [class*="hover:bg-[#F3F3F3]"]:hover { background-color: rgb(var(--c-surface-c)); }
+html.dark [class*=" bg-[#FAF2E8]"],
+html.dark [class^="bg-[#FAF2E8]"],
+html.dark [class*="bg-[#FDEEE4]"],
+html.dark [class*="bg-[#F5EEE6]"],
+html.dark [class*="hover:bg-[#FAF2E8]"]:hover { background-color: rgb(var(--c-secondary-container)); }
+html.dark [class*="bg-[#E3F8EC]"] { background-color: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); }
+html.dark [class*="bg-[#E3F0FF]"] { background-color: rgb(var(--c-scheduled) / 0.15); color: rgb(var(--c-scheduled)); }
+html.dark [class*="bg-[#EEEAFD]"] { background-color: rgb(var(--c-violet) / 0.15); color: rgb(var(--c-violet)); }
+html.dark [class*="bg-[#FFF6DB]"] { background-color: rgb(var(--c-warning) / 0.15); color: rgb(var(--c-warning)); }
+/* Warm page gradients become the plain dark page background */
+html.dark [class*="bg-[linear-gradient"],
+html.dark [class*="from-[#"],
+html.dark main[style*="gradient"] { background: rgb(var(--c-surface)) !important; }

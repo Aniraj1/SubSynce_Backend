@@ -1,0 +1,58 @@
+{% extends 'ops/layouts/app.html' %}
+{% load ops_extras %}
+
+{% block title %}My Dashboard - SubSync{% endblock %}
+
+{% block page %}
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-ink">Hi, {{ user.username }}</h1>
+    <p class="text-ink-light text-sm mt-1">Here are your jobs for today and what's coming up.</p>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% include 'ops/partials/stat_card.html' with icon='location_on' value=summary.sites label='Assigned sites' %}
+    {% include 'ops/partials/stat_card.html' with icon='task_alt' tone='success' value=summary.completed_count label='Jobs completed' %}
+    {% include 'ops/partials/stat_card.html' with icon='pending_actions' tone='warning' value=summary.invoices.pending label='Invoices pending' %}
+    {% include 'ops/partials/stat_card.html' with icon='payments' tone='success' value=summary.earnings|money label='Approved earnings' %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <section class="card p-5 " aria-labelledby="today-heading">
+        <h2 id="today-heading" class="text-base font-semibold text-ink mb-4">Today</h2>
+        {% if summary.today %}
+        <ul class="divide-y divide-surface-container">
+            {% for job in summary.today %}
+            <li class="flex items-center justify-between gap-3 py-3">
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-ink truncate">{{ job.site.name }}</p>
+                    <p class="text-xs text-ink-light truncate">{{ job.scheduled_time|time:"g:i A" }} · {{ job.site.address }}</p>
+                </div>
+                {% include 'ops/partials/job_actions.html' %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-ink-light">No jobs today.</p>
+        {% endif %}
+    </section>
+
+    <section class="card p-5 " aria-labelledby="upcoming-heading">
+        <div class="flex items-center justify-between mb-4">
+            <h2 id="upcoming-heading" class="text-base font-semibold text-ink">Next 14 Days</h2>
+            <a href="{% url 'ops:my_jobs' %}" class="text-sm font-medium text-primary hover:underline">All Jobs</a>
+        </div>
+        {% if summary.upcoming %}
+        <ul class="divide-y divide-surface-container">
+            {% for job in summary.upcoming %}
+            <li class="py-3">
+                <p class="text-sm font-medium text-ink">{{ job.site.name }}</p>
+                <p class="text-xs text-ink-light">{{ job.scheduled_date|date:"D j M" }} · {{ job.scheduled_time|time:"g:i A" }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-ink-light">Nothing scheduled in the next two weeks.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SubSync{% endblock %}</title>
+    <meta name="theme-color" content="#F5F3F1">
+
+    <!-- Theme: apply the saved choice before first paint so there is no flash.
+         Stored values: "light" (default), "dark", "system". -->
+    <script>
+        (function () {
+            var theme = 'light';
+            try { theme = localStorage.getItem('subsync-theme') || 'light'; } catch (e) {}
+            // Sign-in pages are designed light-only (no toggle there).
+            if ({% block force_light_theme %}false{% endblock %}) theme = 'light';
+            var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    
+    <!-- Poppins: the one app font (Tailwind's font-sans below), as in the SubSync designs. Loaded once, here. -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols Icons -->
+    <!-- Material Symbols Icons: one fixed style (not the multi-MB variable font), and
+         display=block so icon names stay invisible instead of showing as text while it loads. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+
+    <!-- Tailwind CSS (Play CDN for development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        // SubSync palette v2. Values live in static/css/app.css as
+                        // CSS variables so the dark theme can swap them; the fallbacks are the
+                        // light palette, so a missing or stale app.css can't turn colours black.
+                        surface: 'rgb(var(--c-surface, 245 243 241) / <alpha-value>)',
+                        card: 'rgb(var(--c-surface-lowest, 255 255 255) / <alpha-value>)',
+                        sidenav: 'rgb(var(--c-surface-low, 250 249 247) / <alpha-value>)',
+                        'surface-container': 'rgb(var(--c-surface-c, 240 237 232) / <alpha-value>)',
+                        'surface-container-high': 'rgb(var(--c-surface-high, 234 230 224) / <alpha-value>)',
+                        greige: 'rgb(var(--c-surface-highest, 228 223 217) / <alpha-value>)',
+                        primary: 'rgb(var(--c-primary, 244 132 43) / <alpha-value>)',
+                        'primary-hover': 'rgb(var(--c-primary-strong, 217 108 16) / <alpha-value>)',
+                        'on-primary': 'rgb(var(--c-on-accent, 255 255 255) / <alpha-value>)',
+                        'secondary-container': 'rgb(var(--c-secondary-container, 253 227 205) / <alpha-value>)',
+                        'on-secondary-container': 'rgb(var(--c-on-secondary-container, 138 74 16) / <alpha-value>)',
+                        ink: 'rgb(var(--c-ink, 34 34 33) / <alpha-value>)',
+                        'text-2': 'rgb(var(--c-text-2, 61 59 55) / <alpha-value>)',
+                        'ink-light': 'rgb(var(--c-ink-light, 92 89 82) / <alpha-value>)',
+                        outline: 'rgb(var(--c-outline, 138 134 126) / <alpha-value>)',
+                        success: 'rgb(var(--c-success, 14 138 95) / <alpha-value>)',
+                        warning: 'rgb(var(--c-warning, 180 83 9) / <alpha-value>)',
+                        error: 'rgb(var(--c-error, 198 58 47) / <alpha-value>)',
+                        scheduled: 'rgb(var(--c-scheduled, 37 99 235) / <alpha-value>)',
+                        completed: 'rgb(var(--c-completed, 14 138 95) / <alpha-value>)',
+                        missed: 'rgb(var(--c-missed, 217 119 6) / <alpha-value>)',
+                        violet: 'rgb(var(--c-violet, 124 58 237) / <alpha-value>)',
+                    },
+                    transitionDuration: { DEFAULT: '300ms' },
+                    transitionTimingFunction: { DEFAULT: 'cubic-bezier(0, 0, 0.2, 1)' },
+                    fontFamily: {
+                        sans: ['Poppins', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=merge-v2">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-surface text-ink font-sans min-h-screen"{% if user.role == 'CONTRACTOR' %} data-ui="contractor"{% endif %}>
+    
+    <!-- Messages (Success, Error, etc.) -->
+    {% if messages %}
+    <div class="fixed top-4 right-4 left-4 sm:left-auto sm:max-w-sm z-[60] space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-xl shadow-lg {% if message.tags == 'success' %}bg-success{% elif message.tags == 'error' %}bg-error{% else %}bg-primary{% endif %} text-on-primary">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content Area -->
+    {% block content %}
+    <!-- Child templates will fill this -->
+    {% endblock %}
+    
+    <!-- JavaScript -->
+    <script src="{% static 'js/theme.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Mobile sidebar drawer: works for any page with a [data-sidebar] aside -->
+    <script>
+        (function () {
+            var sidebar = document.querySelector('[data-sidebar]');
+            if (!sidebar) return;
+            var overlay = document.querySelector('[data-sidebar-overlay]');
+
+            function setOpen(open) {
+                sidebar.classList.toggle('-translate-x-full', !open);
+                if (overlay) overlay.classList.toggle('hidden', !open);
+                document.querySelectorAll('[data-sidebar-open]').forEach(function (btn) {
+                    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+            }
+
+            document.querySelectorAll('[data-sidebar-open]').forEach(function (btn) {
+                btn.addEventListener('click', function () { setOpen(true); });
+            });
+            document.querySelectorAll('[data-sidebar-close]').forEach(function (btn) {
+                btn.addEventListener('click', function () { setOpen(false); });
+            });
+            if (overlay) overlay.addEventListener('click', function () { setOpen(false); });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') setOpen(false);
+            });
+        })();
+    </script>
+
+    <!-- Account menu (top-right): toggle on click, close on outside click or Escape -->
+    <script>
+        (function () {
+            function setOpen(menu, open) {
+                menu.querySelector('[data-account-panel]').classList.toggle('hidden', !open);
+                menu.querySelector('[data-account-trigger]').setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            document.addEventListener('click', function (event) {
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    var panel = menu.querySelector('[data-account-panel]');
+                    if (menu.querySelector('[data-account-trigger]').contains(event.target)) {
+                        setOpen(menu, panel.classList.contains('hidden'));
+                    } else if (!panel.contains(event.target)) {
+                        setOpen(menu, false);
+                    }
+                });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') return;
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    if (!menu.querySelector('[data-account-panel]').classList.contains('hidden')) {
+                        setOpen(menu, false);
+                        menu.querySelector('[data-account-trigger]').focus();
+                    }
+                });
+            });
+        })();
+    </script>
+
+    <!-- Auto-hide messages after 5 seconds -->
+    <script>
+        setTimeout(function() {
+            document.querySelectorAll('.fixed.top-4').forEach(function(el) {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(function() { el.remove(); }, 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

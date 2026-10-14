@@ -1,0 +1,8 @@
+{% comment %}Contractor actions for one schedule `job`.{% endcomment %}
+{% with work=job.work_completion %}
+{% if work %}
+    <a href="{% url 'ops:work_detail' work.id %}" class="text-sm font-medium text-primary hover:underline">View Record</a>
+{% else %}
+    <span class="pill pill-{{ job.status|lower }}">{{ job.status|title }}</span>
+{% endif %}
+{% endwith %}
